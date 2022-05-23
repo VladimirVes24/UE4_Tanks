@@ -16,6 +16,7 @@ void ATanksPlayerController::SetupInputComponent()
 	InputComponent->BindAxis("RotationRight", this, &ATanksPlayerController::OnTryingToRotateRight);
 	InputComponent->BindAction("Shoot", IE_Pressed, this, &ATanksPlayerController::OnShoot);
 	InputComponent->BindAction("CycleFireMode", IE_Pressed, this, &ATanksPlayerController::OnTryingToChangeFireRate);
+	InputComponent->BindAction("Flip", IE_Pressed, this, &ATanksPlayerController::OnFlip);
 
 	bShowMouseCursor = true;
 }
@@ -54,6 +55,12 @@ void ATanksPlayerController::OnShoot()
 		PlayerTank->Shoot();
 }
 
+void ATanksPlayerController::OnFlip()
+{
+	if (PlayerTank)
+		PlayerTank->Flip();
+}
+
 
 void ATanksPlayerController::BeginPlay()
 {
@@ -73,7 +80,7 @@ void ATanksPlayerController::Tick(float DeltaSeconds)
 	MouseWorldPosition = MousePosition - MouseDirection * Z / MouseDirection.Z;
 	
 	//DrawDebugSphere(GetWorld(), MousePosition, 3, 16, FColor::Red);
-	//DrawDebugLine(GetWorld(), MousePosition, MousePosition + MouseDirection*5000, FColor::Black);
+	DrawDebugLine(GetWorld(), PlayerTank->CannonPosition->GetComponentLocation(), MouseWorldPosition, FColor::Black);
 
 	//DrawDebugSphere(GetWorld(), MouseWorldPosition, 3, 16, FColor::Green);
 

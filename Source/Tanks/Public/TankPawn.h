@@ -74,6 +74,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement | Speed")
 	float RotationAcceleration = 0.05;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement | Speed")
+	float RotationSpeedTurret = 50;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement | Speed")
 	float RotationAccelerationTurret = 0.02;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
 	float HealthPointsMax = 100;
@@ -102,6 +104,7 @@ public:
 	void Shoot();
 	void ChangeFireMode();
 	void Reload(int ReloadAmount);
+	void Flip();
 	
 protected:
 	// Called when the game starts or when spawned
@@ -114,6 +117,8 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	
+
 private:
 	float TargetForwardPushScale = 0;
 	float CurrentForwardMoveScale = 0;
@@ -123,9 +128,12 @@ private:
 	float TargetRotationScale = 0;
 	float CurrentRotationScale = 0;
 
+	float TargetRotationScaleTurret = 0;
+	float CurrentRotationScaleTurret = 0;
 	
 	FTimerHandle TimerHandle;
 	bool bReloaded = true;
+	bool bFlipped = false;
 	void ResetReloadState();
 	
 	

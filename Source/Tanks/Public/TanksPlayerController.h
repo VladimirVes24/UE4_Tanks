@@ -24,6 +24,7 @@ public:
 	void OnTryingToRotateRight(float InputPushScale);
 	void OnTryingToChangeFireRate();
 	void OnShoot();
+	void OnFlip();
 
 	virtual void BeginPlay() override;
 
