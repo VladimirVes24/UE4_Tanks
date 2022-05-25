@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Cannon.h"
-#include "HealthInGame.h"
 #include "Camera/CameraComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Components/BoxComponent.h"
@@ -31,12 +30,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UBoxComponent* BoxComponent3;
 
-	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	//UBoxComponent* BoxComponent4;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UBoxComponent* TurretCollisionBox;
 
-	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	//UBoxComponent* BoxComponent5;
-	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UBoxComponent* CannonCollisionBox;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UStaticMeshComponent* TankBody;
 
@@ -55,14 +54,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
 	TSubclassOf<ACannon> CannonType;
 	
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	//TSubclassOf<UHealthInGame> HealthWidget;
-	
 	UPROPERTY()
 	class ACannon* Cannon;
-
-	//UPROPERTY()
-	//UHealthInGame* HealthWidget;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement | Speed")
 	float MovementSpeed = 800;
@@ -74,9 +67,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement | Speed")
 	float RotationAcceleration = 0.05;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement | Speed")
-	float RotationSpeedTurret = 50;
+	float RotationSpeedTurret = 0.1;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement | Speed")
-	float RotationAccelerationTurret = 0.02;
+	float RotationAccelerationTurret = 0.01;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
 	float HealthPointsMax = 100;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
@@ -91,7 +84,7 @@ public:
 	int AmmoLeft = 0;
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
 	int ClipContains = 0;
-
+	
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Fire params")
 	float FireRateTimerValue = 0;
 	
@@ -99,10 +92,11 @@ public:
 	void SetMoveRightPushScale(float Scale);
 	void SetRotateRightScale(float Scale);
 
-	int GetClipContains();
+	int GetClipContains() const;
 
 	void Shoot();
-	void ChangeFireMode();
+	void FireSpecial();
+	void ChangeFireMode() const;
 	void Reload(int ReloadAmount);
 	void Flip();
 	
@@ -130,6 +124,7 @@ private:
 
 	float TargetRotationScaleTurret = 0;
 	float CurrentRotationScaleTurret = 0;
+	float RotationMarginDegrees = 1;
 	
 	FTimerHandle TimerHandle;
 	bool bReloaded = true;
@@ -139,8 +134,8 @@ private:
 	
     void MoveTank(float DeltaTime);
 	void RotateTank(float DeltaTime);
-	void RotateCannon(float Deltatime);
-	
+	void RotateCannon() const;
+	void SetupCannon();
 
 	UPROPERTY()
 	class ATanksPlayerController* TankController;

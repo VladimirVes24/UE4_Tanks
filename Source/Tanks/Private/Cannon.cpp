@@ -8,15 +8,15 @@
 ACannon::ACannon()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>("RootComponent");
 	
-	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
-	Mesh->SetupAttachment(RootComponent);
+	CannonMesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
+	CannonMesh->SetupAttachment(RootComponent);
 
 	ProjectileSpawnPoint = CreateDefaultSubobject<UArrowComponent>("ProjectileSpawnPoint");
-	ProjectileSpawnPoint->SetupAttachment(RootComponent);
+	ProjectileSpawnPoint->SetupAttachment(CannonMesh);
 }
 
 bool ACannon::Shoot(int LeftInClip)
@@ -40,9 +40,10 @@ bool ACannon::Shoot(int LeftInClip)
 	}
 	bReadyToShoot = false;
 	
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this,&ACannon::ResetShootState), 1/FireRate, false);
+	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, FTimerDelegate::CreateUObject(this,&ACannon::ResetShootState), 1/FireRate, false);
 	return true;
 }
+
 
 void ACannon::ShootBurst()
 {
@@ -95,6 +96,6 @@ void ACannon::Tick(float DeltaTime)
 
 float ACannon::GetTimerValue() const
 {
-	return GetWorld()->GetTimerManager().GetTimerElapsed(TimerHandle);
+	return GetWorld()->GetTimerManager().GetTimerElapsed(ReloadTimer);
 }
 

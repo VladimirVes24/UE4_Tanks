@@ -8,7 +8,7 @@
 #include "GameFramework/Actor.h"
 #include "Cannon.generated.h"
 
-UENUM()
+UENUM(BlueprintType)
 enum class ECannonType : uint8
 {
 	FireProjectile = 0 UMETA(DisplayName = "Use projectile"),
@@ -26,14 +26,18 @@ public:
 	ACannon();
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category="Components")
-	UStaticMeshComponent* Mesh;
+	UStaticMeshComponent* CannonMesh;
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category="Components")
 	UArrowComponent* ProjectileSpawnPoint;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Fire params")
-	float FireRate = 1;
+	float FireRate = 1.0f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Fire params")
-	float BurstSize = 4;
+	int BurstSize = 4;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Fire params")
+	float FireRange = 1000.0f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Fire params")
+	float FireDamage = 1.0f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Fire params")
 	ECannonType Type = ECannonType::FireProjectile;
 
@@ -55,7 +59,7 @@ public:
 
 private:
 	void ResetShootState();
-	FTimerHandle TimerHandle, TimerHandle2;
+	FTimerHandle ReloadTimer, TimerHandle2;
 
 	bool bReadyToShoot = true;
 	int CallTracker = 0;

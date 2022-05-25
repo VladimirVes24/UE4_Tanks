@@ -7,9 +7,6 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "MainMenuWidgetCPP.h"
 #include "Animation/Rig.h"
-#include "Components/ProgressBar.h"
-#include "Tanks/Tanks.h"
-
 
 // Sets default values
 ATankPawn::ATankPawn()
@@ -25,26 +22,21 @@ ATankPawn::ATankPawn()
 
 	BoxComponent3 = CreateDefaultSubobject<UBoxComponent>("TrackRight");
 	BoxComponent3->SetupAttachment(RootComponent);
-
-	//BoxComponent4 = CreateDefaultSubobject<UBoxComponent>("Tower");
-	//BoxComponent4->SetupAttachment(RootComponent);
-
-	//BoxComponent4 = CreateDefaultSubobject<UBoxComponent>("Cannon");
-	//BoxComponent4->SetupAttachment(BoxComponent4);
-
+	
 	TankBody = CreateDefaultSubobject<UStaticMeshComponent>("TankBody");
 	TankBody->SetupAttachment(RootComponent);
 
 	TankTurret = CreateDefaultSubobject<UStaticMeshComponent>("TankTurret");
 	TankTurret->SetupAttachment(TankBody);
 
-	CannonPosition = CreateDefaultSubobject<UArrowComponent>("CannonPosition");
-	CannonPosition->SetupAttachment(TankTurret);
+	TurretCollisionBox = CreateDefaultSubobject<UBoxComponent>("TankTurretCollision");
+	TurretCollisionBox->AttachToComponent(TankTurret, FAttachmentTransformRules::KeepRelativeTransform);
 
-	//HealthWidget = CreateDefaultSubobject<UProgressBar>("HealthBar");
-	//HealthWidget = 
-	//HealthBar =
-	
+	CannonPosition = CreateDefaultSubobject<UArrowComponent>("CannonPosition");
+	CannonPosition->AttachToComponent(TankTurret, FAttachmentTransformRules::KeepRelativeTransform);
+
+	CannonCollisionBox = CreateDefaultSubobject<UBoxComponent>("TankCannonCollision");
+	CannonCollisionBox->AttachToComponent(CannonPosition, FAttachmentTransformRules::KeepRelativeTransform);
 
 	ArmComponent = CreateDefaultSubobject<USpringArmComponent>("ArmComponent");
 	ArmComponent->SetupAttachment(RootComponent);
@@ -55,12 +47,6 @@ ATankPawn::ATankPawn()
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 	CameraComponent->SetupAttachment(ArmComponent);
 	CameraComponent->bUsePawnControlRotation = false;
-
-	
-	//UWidgetComponent* WidgetComp = CreateDefaultSubobject<UWidgetComponent>("WidgetComp");
-	//WidgetComp->SetupAttachment(RootComponent);
-	//WidgetComp->SetWidgetClass(HealthWidget);
-	
 }
 
 /**
@@ -82,7 +68,7 @@ void ATankPawn::SetRotateRightScale(float Scale)
 	TargetRotationScale = Scale;
 }
 
-int ATankPawn::GetClipContains()
+int ATankPawn::GetClipContains() const
 {
 	return ClipContains;
 }
@@ -94,20 +80,13 @@ void ATankPawn::BeginPlay()
 	Super::BeginPlay();
 
 	TankController = Cast<ATanksPlayerController>(GetController());
-
-	if (CannonType)
-	{
-		auto Transform = CannonPosition->GetComponentTransform();
-		Cannon = GetWorld()->SpawnActor<ACannon>(CannonType, Transform);
-		Cannon->AttachToComponent(CannonPosition, FAttachmentTransformRules::SnapToTargetIncludingScale);
-	}
 	
-	
+	SetupCannon();
 	
 	AmmoLeft = AmmoStockSize;
 	ClipContains = ClipSize;
-	//GEngine->AddOnScreenDebugMessage(8888, 10000, FColor::Yellow, FString(TEXT("Ammo left: " + FString::FromInt(AmmoLeft))));
-	//GEngine->AddOnScreenDebugMessage(7777, 10000, FColor::Yellow, FString(TEXT("Clip ammo: " + FString::FromInt(ClipContains))));
+	//GEngine->AddOnScreenDebugMessage(8888, 1, FColor::Yellow, FString(TEXT("Ammo left: " + FString::FromInt(AmmoLeft))));
+	//GEngine->AddOnScreenDebugMessage(7777, 1, FColor::Yellow, FString(TEXT("Clip ammo: " + FString::FromInt(ClipContains))));
 	HealthPointsCurrent = HealthPointsMax;
 	//HealthWidget->UpdateHealthBar(HealthPointsCurrent, HealthPointsMax);
 }
@@ -116,20 +95,20 @@ void ATankPawn::BeginPlay()
 void ATankPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (GetActorRotation().Roll >= 90) bFlipped = true;
+	if (FMath::UnwindDegrees(FMath::Abs(GetActorRotation().Roll) >= 120)) bFlipped = true;
+	else bFlipped = false;
 	MoveTank(DeltaTime);
 	RotateTank(DeltaTime);
-	RotateCannon(DeltaTime);
+	RotateCannon();
 	FireRateTimerValue = Cannon->GetTimerValue();
-	//HealthWidget->UpdateHealthBar(HealthPointsCurrent, HealthPointsMax);
-	//GEngine->AddOnScreenDebugMessage(2222, -1, FColor::Magenta, FString::Printf(TEXT("%f"), GetWorld()->GetTimerManager().GetTimerElapsed(TimerHandle)));
+	GEngine->AddOnScreenDebugMessage(7777, 1, FColor::Blue, FString(TEXT("Clip ammo: " + FString::FromInt(ClipContains))));
+	GEngine->AddOnScreenDebugMessage(8888, 1, FColor::Blue, FString(TEXT("Ammo left: " + FString::FromInt(AmmoLeft))));
 }
 
 // Called to bind functionality to input
 void ATankPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 }
 
 void ATankPawn::MoveTank(float DeltaTime)
@@ -151,76 +130,77 @@ void ATankPawn::RotateTank(float DeltaTime)
 	//UE_LOG(LogTanks, Warning, TEXT("%s"), *Rotation.ToString());
 }
 
-void ATankPawn::RotateCannon(float Deltatime)
+void ATankPawn::RotateCannon() const
 {
 	if(!TankController) return;
 	if (bFlipped) return;
-	//const auto TankOrientation = GetActorRotation();
-	//auto CurrentRotation = TankTurret->GetComponentRotation();
-	//FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(TankTurret->GetComponentLocation(), TankController->GetMousePosition());
-	//TargetRotation.Yaw += 3.14f - GetActorRotation().Yaw;
-	//TankTurret->SetRelativeRotation(FMath::Lerp(TankTurret->GetComponentRotation(), TargetRotation, RotationAccelerationTurret));
-	//TargetRotation = TankTurret->GetComponentRotation();
-	//TargetRotation.Pitch = 0;
-	//TargetRotation.Roll = 0;
-	//TankTurret->SetRelativeRotation(TargetRotation);
-	// = Difference - UKismetMathLibrary::FindLookAtRotation(TankTurret->GetComponentLocation(), TankController->GetMousePosition()) - TankTurret->GetComponentRotation();
+	
+	const FRotator ActorAbsoluteRotation = GetActorRotation();
+	const FRotator TurretAbsoluteRotation = CannonPosition->GetComponentRotation();
+	const FRotator TurretRelativeRotation = TurretAbsoluteRotation - ActorAbsoluteRotation;
+	
+	const auto CurrentDifference = UKismetMathLibrary::FindLookAtRotation(TankTurret->GetComponentLocation(), TankController->GetMousePosition()) - TankTurret->GetComponentRotation();
 
+	const float TurretTargetRelativeRotationYaw = TurretRelativeRotation.Yaw + FMath::UnwindDegrees(CurrentDifference.Yaw);
+	const float YawRotation = TurretTargetRelativeRotationYaw;
+	const FRotator NewRotation = FRotator(0, YawRotation, 0);
+	TankTurret->SetRelativeRotation(NewRotation);
+	
 	/*
 	auto CurrentAbsRotationTurret = TankTurret->GetComponentRotation().Yaw;
 	auto TargetAbsRotationTurret = UKismetMathLibrary::FindLookAtRotation(TankTurret->GetComponentLocation(), TankController->GetMousePosition()).Yaw;
 	if (CurrentAbsRotationTurret != TargetAbsRotationTurret)
 	{
 		CurrentRotationScaleTurret = FMath::Lerp(CurrentRotationScaleTurret, 1.0f, RotationAccelerationTurret);
-		float yawRotation = RotationSpeedTurret * CurrentRotationScaleTurret * Deltatime;
+		float yawRotation = RotationSpeedTurret * CurrentRotationScaleTurret * DeltaTime;
 		yawRotation += (TargetAbsRotationTurret - CurrentAbsRotationTurret); 
 		FRotator NewRotation = FRotator(0, yawRotation ,0);
 		TankTurret->SetRelativeRotation(NewRotation);
 	}
 	*/
 	
-	//FRotator TargetRelativeRotation = UKismetMathLibrary::FindLookAtRotation(TankTurret->GetComponentLocation(), TankController->GetMousePosition()) - GetActorRotation();
-	//FRotator CurrentRotation = TankTurret->GetComponentRotation();
-	//yawRotation = CurrentRotation.Yaw
+	/*
+	const FRotator ActorAbsoluteRotation = GetActorRotation();
+	const FRotator CannonAbsoluteRotation = CannonPosition->GetComponentRotation();
+	FRotator CannonRelativeRotation = CannonAbsoluteRotation - ActorAbsoluteRotation;
+	auto CurrentDifference = UKismetMathLibrary::FindLookAtRotation(CannonPosition->GetComponentLocation(), TankController->GetMousePosition()) - CannonPosition->GetComponentRotation();
+	float yawRotation = CannonRelativeRotation.Yaw;
+	if (FMath::Abs(CurrentDifference.Yaw) > RotationMarginDegrees)
+	{
+		float CannonTargetRelativeRotationYaw = CannonRelativeRotation.Yaw + FMath::UnwindDegrees(CurrentDifference.Yaw);
+		yawRotation += CannonTargetRelativeRotationYaw * RotationAccelerationTurret;
+	}
+	FRotator NewRotation = FRotator(0, yawRotation, 0);
+	TankTurret->SetRelativeRotation(NewRotation);
+	*/
 	
-	
-	
-	
-	
+	/*
 	const FRotator ActorAbsoluteRotation = GetActorRotation();
 	const FRotator TurretAbsoluteRotation = TankTurret->GetComponentRotation();
 	FRotator TurretRelativeRotation = TurretAbsoluteRotation - ActorAbsoluteRotation;
 	auto CurrentDifference = UKismetMathLibrary::FindLookAtRotation(CannonPosition->GetComponentLocation(), TankController->GetMousePosition()) - CannonPosition->GetComponentRotation();
 	float TurretTargetRelativeRotationYaw = TurretRelativeRotation.Yaw + FMath::UnwindDegrees(CurrentDifference.Yaw);
-	float yawRotation = FMath::Lerp(TurretRelativeRotation.Yaw, TurretTargetRelativeRotationYaw, RotationAccelerationTurret);
+	float yawRotation = TurretTargetRelativeRotationYaw * RotationSpeedTurretMultiplier;
 	FRotator NewRotation = FRotator(0, yawRotation, 0);
 	TankTurret->SetRelativeRotation(NewRotation);
-	
-	
-	//FRotator CurrentRotation = TankTurret->GetComponentRotation();
-	//FRotator Difference = UKismetMathLibrary::FindLookAtRotation(TankTurret->GetComponentLocation(), TankController->GetMousePosition()) - CurrentRotation;
-	//FRotator Increment = FMath::Lerp(CurrentRotation, Difference, RotationAccelerationTurret);
-	//FRotator TargetRotation = CurrentRotation+Increment;
-	//TankTurret->SetRelativeRotation(TargetRotation);
-	//FRotator CurrentRotation;
-	//FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(TankTurret->GetComponentLocation(), TankController->GetMousePosition());
-	//CurrentRotation.Pitch = GetActorRotation().Pitch - TankTurret->GetComponentRotation().Pitch;
-	//CurrentRotation.Roll = GetActorRotation().Roll - TankTurret->GetComponentRotation().Roll;
-	//CurrentRotation.Yaw = TargetRotation.Yaw;
-	//TankTurret
-
-	//CurrentRotation = TankTurret->GetComponentRotation();
-	//CurrentRotation.Pitch = 0;
-	//CurrentRotation.Roll = 0;
-	//TankTurret->SetRelativeRotation(CurrentRotation);
-	
-	//TankTurret->SetWorldRotation(FMath::Lerp(TankTurret->GetComponentRotation(), CurrentRotation, RotationAccelerationTurret));
-	
-	
-	
+	*/
 }
 
-void ATankPawn::ChangeFireMode()
+void ATankPawn::SetupCannon()
+{
+	if (Cannon) { Cannon->Destroy(); }
+	if (CannonType)
+	{
+		const auto Transform = CannonPosition->GetComponentTransform();
+		FActorSpawnParameters CannonSpawnParams;
+		CannonSpawnParams.Instigator = this;
+		CannonSpawnParams.Owner = this;
+		Cannon = GetWorld()->SpawnActor<ACannon>(CannonType, Transform, CannonSpawnParams);
+		Cannon->AttachToComponent(CannonPosition, FAttachmentTransformRules::SnapToTargetIncludingScale);
+	}
+}
+
+void ATankPawn::ChangeFireMode() const
 {
 	if (Cannon)
 		Cannon->CycleFireMode();
@@ -259,7 +239,8 @@ void ATankPawn::Shoot()
 		{
 			int ShootAmount = 1;
 			if (!Cannon->Shoot(ClipContains)) return;
-			if (Cannon->Type == ECannonType::FireAuto) ShootAmount = ClipContains;
+			if (Cannon->Type == ECannonType::FireAuto && Cannon->BurstSize >= ClipContains) ShootAmount = ClipContains;
+			else if (Cannon->Type == ECannonType::FireAuto && Cannon->BurstSize < ClipContains) ShootAmount = Cannon->BurstSize;
 			ClipContains -= ShootAmount;
 			//GEngine->AddOnScreenDebugMessage(7777, 10000, FColor::Yellow, FString(TEXT("Clip ammo: " + FString::FromInt(ClipContains))));
 		}
@@ -282,6 +263,21 @@ void ATankPawn::Shoot()
 		}
 			
 		
+	}
+}
+
+void ATankPawn::FireSpecial()
+{
+	if (Cannon->Type == ECannonType::FireAuto)
+	{
+		Shoot();
+	}
+	else
+	{
+		const ECannonType OldCannonType = Cannon->Type;
+		Cannon->Type = ECannonType::FireAuto;
+		Shoot();
+		Cannon->Type = OldCannonType;
 	}
 }
 
