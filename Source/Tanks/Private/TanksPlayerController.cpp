@@ -15,9 +15,11 @@ void ATanksPlayerController::SetupInputComponent()
 	InputComponent->BindAxis("MoveRight", this, &ATanksPlayerController::OnTryingToMoveRight);
 	InputComponent->BindAxis("RotationRight", this, &ATanksPlayerController::OnTryingToRotateRight);
 	InputComponent->BindAction("Shoot", IE_Pressed, this, &ATanksPlayerController::OnShoot);
+	InputComponent->BindAction("Shoot", IE_Released, this, &ATanksPlayerController::OnShootStop);
 	InputComponent->BindAction("CycleFireMode", IE_Pressed, this, &ATanksPlayerController::OnTryingToChangeFireRate);
 	InputComponent->BindAction("Flip", IE_Pressed, this, &ATanksPlayerController::OnFlip);
 	InputComponent->BindAction("FireSpecial", IE_Pressed, this, &ATanksPlayerController::OnShootSpecial);
+	InputComponent->BindAction("SwitchWeapon", IE_Pressed, this, &ATanksPlayerController::OnTryingToSwitchWeapon);
 
 	bShowMouseCursor = true;
 }
@@ -50,11 +52,24 @@ void ATanksPlayerController::OnTryingToChangeFireRate()
 		PlayerTank->ChangeFireMode();
 }
 
+void ATanksPlayerController::OnTryingToSwitchWeapon()
+{
+	if (PlayerTank)
+		PlayerTank->SwitchWeapon();
+}
+
 void ATanksPlayerController::OnShoot()
 {
 	if (PlayerTank)
 		PlayerTank->Shoot();
 }
+
+void ATanksPlayerController::OnShootStop()
+{
+	if (PlayerTank)
+		PlayerTank->OnShootStop();
+}
+
 
 void ATanksPlayerController::OnShootSpecial()
 {

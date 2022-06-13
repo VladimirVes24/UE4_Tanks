@@ -51,11 +51,20 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
 	UArrowComponent* CannonPosition;
 
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
+	UArrowComponent* MachineGunPosition;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
 	TSubclassOf<ACannon> CannonType;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
+	TSubclassOf<ACannon> MachineGunType;
 	
 	UPROPERTY()
-	class ACannon* Cannon;
+	ACannon* Cannon;
+
+	UPROPERTY()
+	ACannon* MachineGun;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement | Speed")
 	float MovementSpeed = 800;
@@ -70,6 +79,8 @@ public:
 	float RotationSpeedTurret = 0.1;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement | Speed")
 	float RotationAccelerationTurret = 0.01;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement | Speed")
+	float CannonTiltMaxDegree = 30;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
 	float HealthPointsMax = 100;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
@@ -95,10 +106,16 @@ public:
 	int GetClipContains() const;
 
 	void Shoot();
+	void OnShootStop();
+	void FireCannon();
 	void FireSpecial();
+	void FireMachineGun();
 	void ChangeFireMode() const;
 	void Reload(int ReloadAmount);
 	void Flip();
+	void SwitchWeapon();
+	void SetupCannon(TSubclassOf<ACannon> DesiredCannonType);
+	void SetupMachineGun(TSubclassOf<ACannon> DesiredMachineGunType);
 	
 protected:
 	// Called when the game starts or when spawned
@@ -127,15 +144,19 @@ private:
 	float RotationMarginDegrees = 1;
 	
 	FTimerHandle TimerHandle;
+	FTimerHandle MachineGunTimerHandle;
 	bool bReloaded = true;
 	bool bFlipped = false;
-	void ResetReloadState();
+	bool bSwitchedToSecondary = false;
+	void ResetReloadState(int ReloadAmount);
 	
 	
     void MoveTank(float DeltaTime);
 	void RotateTank(float DeltaTime);
 	void RotateCannon() const;
-	void SetupCannon();
+	void TiltCannon()const;
+	
+
 
 	UPROPERTY()
 	class ATanksPlayerController* TankController;

@@ -23,7 +23,9 @@ public:
 	void OnTryingToMoveRight(float InputPushScale);
 	void OnTryingToRotateRight(float InputPushScale);
 	void OnTryingToChangeFireRate();
+	void OnTryingToSwitchWeapon();
 	void OnShoot();
+	void OnShootStop();
 	void OnShootSpecial();
 	void OnFlip();
 

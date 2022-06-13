@@ -15,5 +15,11 @@
 				"UMG"
 			]
 		}
+	],
+	"Plugins": [
+		{
+			"Name": "StaticMeshEditorExtension",
+			"Enabled": true
+		}
 	]
 }

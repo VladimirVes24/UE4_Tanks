@@ -15,35 +15,34 @@ class TANKS_API AProjectile : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AProjectile();
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
-	USphereComponent* Collision;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
-	UStaticMeshComponent* Mesh;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Projectile")
-	float MoveSpeed = 500;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Projectile")
-	float MoveRate = 0.005;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Projectile")
-	float Damage = 1;
 	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category="Components")
+	USphereComponent* Collision;
+	
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category="Components")
+	UStaticMeshComponent* Mesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Projectile")
+	float MoveSpeed = 500.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Projectile")
+	float MoveRate = 0.005f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Projectile")
+	float Damage = 10.0f;
 private:
-	FTimerHandle Timer;
+	FTimerHandle MovementTimerHandle;
 
 	UFUNCTION()
-	void OnBeginOverlap(UPrimitiveComponent* OverlappedComponent,
+	void OnMeshOverlapBegin(UPrimitiveComponent* OverlappedComponent,
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
 	const FHitResult& SweepResult);
 
-	
+	UFUNCTION()
 	void MoveTick();
 
 };

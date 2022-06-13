@@ -3,6 +3,8 @@
 
 #include "Cannon.h"
 
+#include "DrawDebugHelpers.h"
+
 
 // Sets default values
 ACannon::ACannon()
@@ -10,16 +12,20 @@ ACannon::ACannon()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
-	RootComponent = CreateDefaultSubobject<USceneComponent>("RootComponent");
+	CannonBase = CreateDefaultSubobject<USphereComponent>("CannonBase");
+	RootComponent = CannonBase;
+
+	CannonBaseMesh = CreateDefaultSubobject<UStaticMeshComponent>("CannonBaseMesh");
+	CannonBaseMesh->SetupAttachment(RootComponent);
 	
 	CannonMesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
-	CannonMesh->SetupAttachment(RootComponent);
+	CannonMesh->SetupAttachment(CannonBaseMesh);
 
 	ProjectileSpawnPoint = CreateDefaultSubobject<UArrowComponent>("ProjectileSpawnPoint");
 	ProjectileSpawnPoint->SetupAttachment(CannonMesh);
 }
 
-bool ACannon::Shoot(int LeftInClip)
+bool ACannon::Shoot(int ShootAmount)
 {
 	
 	if (!bReadyToShoot)
@@ -32,14 +38,17 @@ bool ACannon::Shoot(int LeftInClip)
 		break;
 	case ECannonType::FireTrace:
 		GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, FString(TEXT("Bum")));
+		ShootTrace();
 		break;
 	case ECannonType::FireAuto:
-		CallTracker = LeftInClip;
-		GetWorldTimerManager().SetTimer(TimerHandle2, this, &ACannon::ShootBurst, FireRate/BurstSize, true);
+		CallTracker = ShootAmount;
+		GetWorldTimerManager().SetTimer(ShootRateTimer, this, &ACannon::ShootBurst, FireRate/BurstSize, true);
+		break;
+	case ECannonType::FireMachineGun:
+		GetWorld()->SpawnActor<AProjectile>(ProjectileClass, ProjectileSpawnPoint->GetComponentLocation(), ProjectileSpawnPoint->GetComponentRotation());
 		break;
 	}
 	bReadyToShoot = false;
-	
 	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, FTimerDelegate::CreateUObject(this,&ACannon::ResetShootState), 1/FireRate, false);
 	return true;
 }
@@ -50,7 +59,28 @@ void ACannon::ShootBurst()
 	--CallTracker;
 	//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Purple, FString(TEXT("Bum")));
 	GetWorld()->SpawnActor<AProjectile>(ProjectileClass, ProjectileSpawnPoint->GetComponentLocation(), ProjectileSpawnPoint->GetComponentRotation());
-	if (CallTracker <=0 ) GetWorldTimerManager().ClearTimer(TimerHandle2);
+	if (CallTracker <=0 ) GetWorldTimerManager().ClearTimer(ShootRateTimer);
+}
+
+void ACannon::ShootTrace()
+{
+	FHitResult HitResult;
+	FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("FireTrace")), true, this);
+	TraceParams.bTraceComplex = true;
+	TraceParams.bReturnPhysicalMaterial = false;
+
+	FVector StartPoint = ProjectileSpawnPoint->GetComponentLocation();
+	FVector EndPoint = ProjectileSpawnPoint->GetForwardVector() * FireRange + StartPoint;
+	if(GetWorld()->LineTraceSingleByChannel(HitResult, StartPoint, EndPoint, ECC_Visibility, TraceParams))
+	{
+		DrawDebugLine(GetWorld(), StartPoint, HitResult.Location, FColor::Red, false, 0.5f, 1, 15);
+
+		if (HitResult.Actor.Get())
+		{
+			HitResult.Actor.Get()->Destroy();
+		}
+	}
+	else DrawDebugLine(GetWorld(), StartPoint, EndPoint, FColor::Red, false, 0.5f, 1, 50);
 }
 
 void ACannon::ResetShootState()

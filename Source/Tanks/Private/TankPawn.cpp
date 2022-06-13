@@ -33,7 +33,10 @@ ATankPawn::ATankPawn()
 	TurretCollisionBox->AttachToComponent(TankTurret, FAttachmentTransformRules::KeepRelativeTransform);
 
 	CannonPosition = CreateDefaultSubobject<UArrowComponent>("CannonPosition");
-	CannonPosition->AttachToComponent(TankTurret, FAttachmentTransformRules::KeepRelativeTransform);
+	CannonPosition->SetupAttachment(TankTurret);
+
+	MachineGunPosition = CreateDefaultSubobject<UArrowComponent>("MachineGunPosition");
+	MachineGunPosition->SetupAttachment(TankTurret);
 
 	CannonCollisionBox = CreateDefaultSubobject<UBoxComponent>("TankCannonCollision");
 	CannonCollisionBox->AttachToComponent(CannonPosition, FAttachmentTransformRules::KeepRelativeTransform);
@@ -81,7 +84,8 @@ void ATankPawn::BeginPlay()
 
 	TankController = Cast<ATanksPlayerController>(GetController());
 	
-	SetupCannon();
+	SetupCannon(CannonType);
+	SetupMachineGun(MachineGunType);
 	
 	AmmoLeft = AmmoStockSize;
 	ClipContains = ClipSize;
@@ -100,6 +104,7 @@ void ATankPawn::Tick(float DeltaTime)
 	MoveTank(DeltaTime);
 	RotateTank(DeltaTime);
 	RotateCannon();
+	TiltCannon();
 	FireRateTimerValue = Cannon->GetTimerValue();
 	GEngine->AddOnScreenDebugMessage(7777, 1, FColor::Blue, FString(TEXT("Clip ammo: " + FString::FromInt(ClipContains))));
 	GEngine->AddOnScreenDebugMessage(8888, 1, FColor::Blue, FString(TEXT("Ammo left: " + FString::FromInt(AmmoLeft))));
@@ -139,7 +144,7 @@ void ATankPawn::RotateCannon() const
 	const FRotator TurretAbsoluteRotation = CannonPosition->GetComponentRotation();
 	const FRotator TurretRelativeRotation = TurretAbsoluteRotation - ActorAbsoluteRotation;
 	
-	const auto CurrentDifference = UKismetMathLibrary::FindLookAtRotation(TankTurret->GetComponentLocation(), TankController->GetMousePosition()) - TankTurret->GetComponentRotation();
+	const auto CurrentDifference = UKismetMathLibrary::FindLookAtRotation(TankTurret->GetComponentLocation(), TankController->GetMousePosition()) - TurretAbsoluteRotation;
 
 	const float TurretTargetRelativeRotationYaw = TurretRelativeRotation.Yaw + FMath::UnwindDegrees(CurrentDifference.Yaw);
 	const float YawRotation = TurretTargetRelativeRotationYaw;
@@ -186,18 +191,60 @@ void ATankPawn::RotateCannon() const
 	*/
 }
 
-void ATankPawn::SetupCannon()
+void ATankPawn::TiltCannon() const
 {
-	if (Cannon) { Cannon->Destroy(); }
-	if (CannonType)
+	if(!TankController) return;
+	if (bFlipped) return;
+
+	const FRotator ActorAbsoluteRotation = GetActorRotation();
+	const FRotator CannonAbsoluteRotation = CannonPosition->GetComponentRotation();
+	const FRotator CannonRelativeRotation = CannonAbsoluteRotation - ActorAbsoluteRotation;
+	const FRotator CurrentDifference = UKismetMathLibrary::FindLookAtRotation(TankTurret->GetComponentLocation(), TankController->GetMousePosition()) - CannonAbsoluteRotation;
+
+	FRotator NewRotation = CannonRelativeRotation;
+	if (CurrentDifference.Pitch == 0) return;
+	if (FMath::Abs(NewRotation.Pitch + CurrentDifference.Pitch) >= CannonTiltMaxDegree)
 	{
-		const auto Transform = CannonPosition->GetComponentTransform();
-		FActorSpawnParameters CannonSpawnParams;
-		CannonSpawnParams.Instigator = this;
-		CannonSpawnParams.Owner = this;
-		Cannon = GetWorld()->SpawnActor<ACannon>(CannonType, Transform, CannonSpawnParams);
-		Cannon->AttachToComponent(CannonPosition, FAttachmentTransformRules::SnapToTargetIncludingScale);
+		if (CurrentDifference.Pitch <0) NewRotation.Pitch = -CannonTiltMaxDegree;
+		else NewRotation.Pitch = CannonTiltMaxDegree;
 	}
+	else NewRotation.Pitch += CurrentDifference.Pitch;
+
+	CannonPosition->SetRelativeRotation(FRotator(NewRotation.Pitch, 0, 0 ));
+	
+}
+
+void ATankPawn::SwitchWeapon()
+{
+	bSwitchedToSecondary = !bSwitchedToSecondary;
+	if (bSwitchedToSecondary) GEngine->AddOnScreenDebugMessage(8238, 10, FColor::White, FString::Printf(TEXT("Switched to Machine Gun")));
+	else GEngine->AddOnScreenDebugMessage(8238, 10, FColor::White, FString::Printf(TEXT("Switched to Cannon")));
+}
+
+void ATankPawn::SetupCannon(TSubclassOf<ACannon> DesiredCannonType)
+{
+	if (DesiredCannonType) { CannonType = DesiredCannonType; }
+	if (Cannon) { Cannon->Destroy(); }
+	
+	const auto Transform = CannonPosition->GetComponentTransform();
+	FActorSpawnParameters CannonSpawnParams;
+	CannonSpawnParams.Instigator = this;
+	CannonSpawnParams.Owner = this;
+	Cannon = GetWorld()->SpawnActor<ACannon>(CannonType, Transform, CannonSpawnParams);
+	Cannon->AttachToComponent(CannonPosition, FAttachmentTransformRules::SnapToTargetIncludingScale);
+}
+
+void ATankPawn::SetupMachineGun(TSubclassOf<ACannon> DesiredMachineGunType)
+{
+	if (DesiredMachineGunType) { MachineGunType = DesiredMachineGunType; }
+	if (MachineGun) { MachineGun->Destroy(); }
+	
+	const auto Transform = MachineGunPosition->GetComponentTransform();
+	FActorSpawnParameters MachineGunSpawnParams;
+	MachineGunSpawnParams.Instigator = this;
+	MachineGunSpawnParams.Owner = this;
+	MachineGun = GetWorld()->SpawnActor<ACannon>(MachineGunType, Transform, MachineGunSpawnParams);
+	MachineGun->AttachToComponent(MachineGunPosition, FAttachmentTransformRules::SnapToTargetIncludingScale);
 }
 
 void ATankPawn::ChangeFireMode() const
@@ -209,9 +256,13 @@ void ATankPawn::ChangeFireMode() const
 void ATankPawn::Reload(int ReloadAmount)
 {
 	bReloaded = false;
-	ClipContains = ReloadAmount;
-	AmmoLeft -= ReloadAmount;
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, FTimerDelegate::CreateUObject(this,&ATankPawn::ResetReloadState), 1/ReloadRate, false, ReloadRate);
+	FTimerDelegate TimerDelegate;
+	TimerDelegate.BindLambda([=]()
+	{
+		ResetReloadState(ReloadAmount);
+	}
+	);
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle, TimerDelegate, 1/ReloadRate, false, ReloadRate);
 }
 
 void ATankPawn::Flip()
@@ -225,46 +276,67 @@ void ATankPawn::Flip()
 	bFlipped = false;
 }
 
-void ATankPawn::ResetReloadState()
+void ATankPawn::ResetReloadState(int ReloadAmount)
 {
 	bReloaded = true;
+	ClipContains = ReloadAmount;
+	AmmoLeft -= ReloadAmount;
 }
 
 void ATankPawn::Shoot()
 {
-	if (Cannon)
+	if (bSwitchedToSecondary && MachineGun)
 	{
-		if (!bReloaded) return;
-		if (ClipContains > 0)
-		{
-			int ShootAmount = 1;
-			if (!Cannon->Shoot(ClipContains)) return;
-			if (Cannon->Type == ECannonType::FireAuto && Cannon->BurstSize >= ClipContains) ShootAmount = ClipContains;
-			else if (Cannon->Type == ECannonType::FireAuto && Cannon->BurstSize < ClipContains) ShootAmount = Cannon->BurstSize;
-			ClipContains -= ShootAmount;
-			//GEngine->AddOnScreenDebugMessage(7777, 10000, FColor::Yellow, FString(TEXT("Clip ammo: " + FString::FromInt(ClipContains))));
-		}
-		else if (AmmoLeft > 0)
-		{
-			if (AmmoLeft > ClipSize)
-			{
-				Reload(ClipSize);
-			}
-				
-			else
-			{
-				Reload(AmmoLeft);
-			}
-			
-		}
-		else
-		{
-			bReloaded = false;
-		}
-			
 		
+		GetWorld()->GetTimerManager().SetTimer(MachineGunTimerHandle, FTimerDelegate::CreateUObject(this, &ATankPawn::FireMachineGun), 1/MachineGun->FireRate, true);
+	}
+	else if (!bSwitchedToSecondary && Cannon)
+	{
+		FireCannon();
 	}
 }
+
+void ATankPawn::FireCannon()
+{
+	if (!bReloaded) return;
+	if (ClipContains > 0)
+	{
+		int ShootAmount = 1;
+		if (Cannon->Type == ECannonType::FireAuto && Cannon->BurstSize >= ClipContains) ShootAmount = ClipContains;
+		if (Cannon->Type == ECannonType::FireAuto && Cannon->BurstSize < ClipContains) ShootAmount = Cannon->BurstSize;
+		if (!Cannon->Shoot(ShootAmount)) return;
+		ClipContains -= ShootAmount;
+		//GEngine->AddOnScreenDebugMessage(7777, 10000, FColor::Yellow, FString(TEXT("Clip ammo: " + FString::FromInt(ClipContains))));
+	}
+	if (ClipContains <=0 && AmmoLeft > 0)
+	{
+		bReloaded = false;
+		if (AmmoLeft > ClipSize)
+		{
+			Reload(ClipSize);
+		}
+				
+		else
+		{
+			Reload(AmmoLeft);
+		}
+	}
+}
+
+void ATankPawn::FireMachineGun()
+{
+	if (MachineGun->Type == ECannonType::FireMachineGun)
+	{
+		MachineGun->Shoot(1);
+	}
+}
+
+void ATankPawn::OnShootStop()
+{
+	GetWorldTimerManager().ClearTimer(MachineGunTimerHandle);
+}
+
+
 
 void ATankPawn::FireSpecial()
 {
@@ -280,5 +352,7 @@ void ATankPawn::FireSpecial()
 		Cannon->Type = OldCannonType;
 	}
 }
+
+
 
 

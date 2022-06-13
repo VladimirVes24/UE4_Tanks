@@ -11,9 +11,10 @@
 UENUM(BlueprintType)
 enum class ECannonType : uint8
 {
-	FireProjectile = 0 UMETA(DisplayName = "Use projectile"),
-	FireTrace = 1 UMETA(DisplayName = "Use trace"),
-	FireAuto = 2 UMETA(DisplayName = "Semi-auto")
+	FireProjectile = 0 UMETA(DisplayName = "Projectile Cannon"),
+	FireTrace = 1 UMETA(DisplayName = "Trace Cannon"),
+	FireAuto = 2 UMETA(DisplayName = "Semi-auto Cannon"),
+	FireMachineGun = 3 UMETA(DisplayName = "MachineGun")
 };
 
 UCLASS()
@@ -24,7 +25,10 @@ class TANKS_API ACannon : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ACannon();
-
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category="Components")
+	USphereComponent* CannonBase;
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category="Components")
+	UStaticMeshComponent* CannonBaseMesh;
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category="Components")
 	UStaticMeshComponent* CannonMesh;
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category="Components")
@@ -35,7 +39,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Fire params")
 	int BurstSize = 4;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Fire params")
-	float FireRange = 1000.0f;
+	float FireRange = 10000.0f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Fire params")
 	float FireDamage = 1.0f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Fire params")
@@ -44,8 +48,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Fire params")
 	TSubclassOf<AProjectile> ProjectileClass;
 	
-	bool Shoot(int LeftInClip);
+	bool Shoot(int ShootAmount);
 	void ShootBurst();
+	//void ShootContinuously();
+	void ShootTrace();
 	void CycleFireMode();
 	
 protected:
@@ -59,7 +65,7 @@ public:
 
 private:
 	void ResetShootState();
-	FTimerHandle ReloadTimer, TimerHandle2;
+	FTimerHandle ReloadTimer, ShootRateTimer, ShootingTimer;
 
 	bool bReadyToShoot = true;
 	int CallTracker = 0;
