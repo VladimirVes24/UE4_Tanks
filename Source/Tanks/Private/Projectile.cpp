@@ -3,6 +3,8 @@
 
 #include "Projectile.h"
 
+#include "DamageTaker.h"
+
 // Sets default values
 AProjectile::AProjectile()
 {
@@ -30,10 +32,40 @@ void AProjectile::OnMeshOverlapBegin(UPrimitiveComponent* OverlappedComponent,
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
 	const FHitResult& SweepResult)
 {
-	GetWorld()->GetTimerManager().ClearTimer(MovementTimerHandle);
-	UE_LOG(LogTemp, Warning, TEXT("Projectile %s collided with %s "), *GetName(), *OtherActor->GetName());
-	OtherActor->Destroy();
-	Destroy();
+	UE_LOG(LogTemp, Warning, TEXT("Projectile %s collided with %s. "), *GetName(), *OtherActor->GetName());
+    AActor* ProjectileOwner = GetOwner();
+    AActor* OwnerOfProjectileOwner;
+	if (ProjectileOwner != nullptr)
+	{
+		OwnerOfProjectileOwner = ProjectileOwner->GetOwner();
+	}
+	else
+	{
+		OwnerOfProjectileOwner = nullptr;
+	}
+    if(OtherActor != ProjectileOwner && OtherActor != OwnerOfProjectileOwner)
+    {
+    IDamageTaker* DamageTakerActor = Cast<IDamageTaker>(OtherActor);
+    if(DamageTakerActor)
+    {
+    FDamageData DamageData;
+    DamageData.DamageValue = Damage;
+    DamageData.Instigator = ProjectileOwner;
+    DamageData.DamageMaker = this;
+    DamageTakerActor->TakeDamage(DamageData);
+    }
+    else
+    {
+    OtherActor->Destroy();
+    }
+    Destroy();
+    }
+
+
+	//GetWorld()->GetTimerManager().ClearTimer(MovementTimerHandle);
+	//UE_LOG(LogTemp, Warning, TEXT("Projectile %s collided with %s "), *GetName(), *OtherActor->GetName());
+	//OtherActor->Destroy();
+	//Destroy();
 }
 
 void AProjectile::MoveTick()

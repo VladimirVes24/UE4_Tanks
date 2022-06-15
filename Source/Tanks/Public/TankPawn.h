@@ -10,6 +10,8 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "HealthComponent.h"
+#include "DamageTaker.h"
 #include "TankPawn.generated.h"
 
 UCLASS(Blueprintable)
@@ -21,26 +23,29 @@ public:
 	// Sets default values for this pawn's properties
 	ATankPawn();
 
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
+	UHealthComponent * HealthComponent;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UBoxComponent* BoxComponent;
+	UBoxComponent* TankBodyCollisionBox;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UBoxComponent* BoxComponent2;
+	UBoxComponent* LeftTrackCollisionBox;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UBoxComponent* BoxComponent3;
+	UBoxComponent* RightTrackCollisionBox;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UBoxComponent* TurretCollisionBox;
+	UBoxComponent* TankTowerCollisionBox;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UBoxComponent* CannonCollisionBox;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UStaticMeshComponent* TankBody;
+	UStaticMeshComponent* TankBodyMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UStaticMeshComponent* TankTurret;
+	UStaticMeshComponent* TankTowerMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	USpringArmComponent* ArmComponent;

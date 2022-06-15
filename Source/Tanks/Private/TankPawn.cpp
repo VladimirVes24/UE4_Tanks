@@ -14,31 +14,32 @@ ATankPawn::ATankPawn()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	BoxComponent = CreateDefaultSubobject<UBoxComponent>("BoxComponent");
-	RootComponent = BoxComponent;
-
-	BoxComponent2 = CreateDefaultSubobject<UBoxComponent>("TrackLeft");
-	BoxComponent2->SetupAttachment(RootComponent);
-
-	BoxComponent3 = CreateDefaultSubobject<UBoxComponent>("TrackRight");
-	BoxComponent3->SetupAttachment(RootComponent);
 	
-	TankBody = CreateDefaultSubobject<UStaticMeshComponent>("TankBody");
-	TankBody->SetupAttachment(RootComponent);
+	TankBodyCollisionBox = CreateDefaultSubobject<UBoxComponent>("Body Collision");
+	RootComponent = TankBodyCollisionBox;
 
-	TankTurret = CreateDefaultSubobject<UStaticMeshComponent>("TankTurret");
-	TankTurret->SetupAttachment(TankBody);
+	LeftTrackCollisionBox = CreateDefaultSubobject<UBoxComponent>("Left Track Collision");
+	LeftTrackCollisionBox->SetupAttachment(RootComponent);
 
-	TurretCollisionBox = CreateDefaultSubobject<UBoxComponent>("TankTurretCollision");
-	TurretCollisionBox->AttachToComponent(TankTurret, FAttachmentTransformRules::KeepRelativeTransform);
+	RightTrackCollisionBox = CreateDefaultSubobject<UBoxComponent>("Right Track Collision");
+	RightTrackCollisionBox->SetupAttachment(RootComponent);
+	
+	TankBodyMesh = CreateDefaultSubobject<UStaticMeshComponent>("Tank Body Mesh");
+	TankBodyMesh->SetupAttachment(RootComponent);
 
-	CannonPosition = CreateDefaultSubobject<UArrowComponent>("CannonPosition");
-	CannonPosition->SetupAttachment(TankTurret);
+	TankTowerMesh = CreateDefaultSubobject<UStaticMeshComponent>("Tank Tower Mesh");
+	TankTowerMesh->SetupAttachment(TankBodyMesh);
 
-	MachineGunPosition = CreateDefaultSubobject<UArrowComponent>("MachineGunPosition");
-	MachineGunPosition->SetupAttachment(TankTurret);
+	TankTowerCollisionBox = CreateDefaultSubobject<UBoxComponent>("Tank Tower Collision");
+	TankTowerCollisionBox->AttachToComponent(TankTowerMesh, FAttachmentTransformRules::KeepRelativeTransform);
 
-	CannonCollisionBox = CreateDefaultSubobject<UBoxComponent>("TankCannonCollision");
+	CannonPosition = CreateDefaultSubobject<UArrowComponent>("Cannon Position");
+	CannonPosition->SetupAttachment(TankTowerMesh);
+
+	MachineGunPosition = CreateDefaultSubobject<UArrowComponent>("MachineGun Position");
+	MachineGunPosition->SetupAttachment(TankTowerMesh);
+
+	CannonCollisionBox = CreateDefaultSubobject<UBoxComponent>("Tank Cannon Collision");
 	CannonCollisionBox->AttachToComponent(CannonPosition, FAttachmentTransformRules::KeepRelativeTransform);
 
 	ArmComponent = CreateDefaultSubobject<USpringArmComponent>("ArmComponent");
@@ -99,12 +100,15 @@ void ATankPawn::BeginPlay()
 void ATankPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
 	if (FMath::UnwindDegrees(FMath::Abs(GetActorRotation().Roll) >= 120)) bFlipped = true;
 	else bFlipped = false;
+	
 	MoveTank(DeltaTime);
 	RotateTank(DeltaTime);
 	RotateCannon();
 	TiltCannon();
+	
 	FireRateTimerValue = Cannon->GetTimerValue();
 	GEngine->AddOnScreenDebugMessage(7777, 1, FColor::Blue, FString(TEXT("Clip ammo: " + FString::FromInt(ClipContains))));
 	GEngine->AddOnScreenDebugMessage(8888, 1, FColor::Blue, FString(TEXT("Ammo left: " + FString::FromInt(AmmoLeft))));
@@ -144,12 +148,12 @@ void ATankPawn::RotateCannon() const
 	const FRotator TurretAbsoluteRotation = CannonPosition->GetComponentRotation();
 	const FRotator TurretRelativeRotation = TurretAbsoluteRotation - ActorAbsoluteRotation;
 	
-	const auto CurrentDifference = UKismetMathLibrary::FindLookAtRotation(TankTurret->GetComponentLocation(), TankController->GetMousePosition()) - TurretAbsoluteRotation;
+	const auto CurrentDifference = UKismetMathLibrary::FindLookAtRotation(TankTowerMesh->GetComponentLocation(), TankController->GetMousePosition()) - TurretAbsoluteRotation;
 
 	const float TurretTargetRelativeRotationYaw = TurretRelativeRotation.Yaw + FMath::UnwindDegrees(CurrentDifference.Yaw);
 	const float YawRotation = TurretTargetRelativeRotationYaw;
 	const FRotator NewRotation = FRotator(0, YawRotation, 0);
-	TankTurret->SetRelativeRotation(NewRotation);
+	TankTowerMesh->SetRelativeRotation(NewRotation);
 	
 	/*
 	auto CurrentAbsRotationTurret = TankTurret->GetComponentRotation().Yaw;
@@ -199,7 +203,7 @@ void ATankPawn::TiltCannon() const
 	const FRotator ActorAbsoluteRotation = GetActorRotation();
 	const FRotator CannonAbsoluteRotation = CannonPosition->GetComponentRotation();
 	const FRotator CannonRelativeRotation = CannonAbsoluteRotation - ActorAbsoluteRotation;
-	const FRotator CurrentDifference = UKismetMathLibrary::FindLookAtRotation(TankTurret->GetComponentLocation(), TankController->GetMousePosition()) - CannonAbsoluteRotation;
+	const FRotator CurrentDifference = UKismetMathLibrary::FindLookAtRotation(TankTowerMesh->GetComponentLocation(), TankController->GetMousePosition()) - CannonAbsoluteRotation;
 
 	FRotator NewRotation = CannonRelativeRotation;
 	if (CurrentDifference.Pitch == 0) return;

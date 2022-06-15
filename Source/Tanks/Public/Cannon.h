@@ -53,10 +53,12 @@ public:
 	//void ShootContinuously();
 	void ShootTrace();
 	void CycleFireMode();
+	bool IsReadyToFire();
 	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	
 
 public:	
 	// Called every frame

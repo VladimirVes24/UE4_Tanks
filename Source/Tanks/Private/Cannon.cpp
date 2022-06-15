@@ -116,6 +116,11 @@ void ACannon::BeginPlay()
 	
 }
 
+bool ACannon::IsReadyToFire()
+{
+	return bReadyToShoot;
+}
+
 // Called every frame
 void ACannon::Tick(float DeltaTime)
 {
