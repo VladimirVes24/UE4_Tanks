@@ -3,7 +3,9 @@
 
 #include "Cannon.h"
 
+#include "DamageTaker.h"
 #include "DrawDebugHelpers.h"
+#include "GameStructs.h"
 
 
 // Sets default values
@@ -23,6 +25,8 @@ ACannon::ACannon()
 
 	ProjectileSpawnPoint = CreateDefaultSubobject<UArrowComponent>("ProjectileSpawnPoint");
 	ProjectileSpawnPoint->SetupAttachment(CannonMesh);
+
+	
 }
 
 bool ACannon::Shoot(int ShootAmount)
@@ -37,8 +41,8 @@ bool ACannon::Shoot(int ShootAmount)
 		GetWorld()->SpawnActor<AProjectile>(ProjectileClass, ProjectileSpawnPoint->GetComponentLocation(), ProjectileSpawnPoint->GetComponentRotation());
 		break;
 	case ECannonType::FireTrace:
-		GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, FString(TEXT("Bum")));
-		ShootTrace();
+		//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, FString(TEXT("Bum")));
+		StartTrace();
 		break;
 	case ECannonType::FireAuto:
 		CallTracker = ShootAmount;
@@ -62,6 +66,11 @@ void ACannon::ShootBurst()
 	if (CallTracker <=0 ) GetWorldTimerManager().ClearTimer(ShootRateTimer);
 }
 
+void ACannon::StartTrace()
+{
+	GetWorldTimerManager().SetTimer(TraceTimer, this, &ACannon::ShootTrace, 1/TracePulsesPerSecond, true);
+}
+
 void ACannon::ShootTrace()
 {
 	FHitResult HitResult;
@@ -73,14 +82,32 @@ void ACannon::ShootTrace()
 	FVector EndPoint = ProjectileSpawnPoint->GetForwardVector() * FireRange + StartPoint;
 	if(GetWorld()->LineTraceSingleByChannel(HitResult, StartPoint, EndPoint, ECC_Visibility, TraceParams))
 	{
-		DrawDebugLine(GetWorld(), StartPoint, HitResult.Location, FColor::Red, false, 0.5f, 1, 15);
+		DrawDebugLine(GetWorld(), StartPoint, HitResult.Location, FColor::Red, true, 2.0f, 1, TraceThickness);
 
 		if (HitResult.Actor.Get())
 		{
-			HitResult.Actor.Get()->Destroy();
+			AActor* OtherActor = HitResult.Actor.Get();
+			if (OtherActor != this && OtherActor != this->GetOwner())
+			{
+				IDamageTaker* DamageTakerActor = Cast<IDamageTaker>(OtherActor);
+				if(DamageTakerActor)
+				{
+					FDamageData DamageData;
+					DamageData.DamageValue = TraceDamagePerSecond / TracePulsesPerSecond;
+					DamageData.Instigator = this->GetOwner();
+					DamageData.DamageMaker = this;
+					DamageTakerActor->TakeDamage(DamageData);
+				}
+			}
+			//HitResult.Actor.Get()->Destroy();
 		}
 	}
-	else DrawDebugLine(GetWorld(), StartPoint, EndPoint, FColor::Red, false, 0.5f, 1, 50);
+	else DrawDebugLine(GetWorld(), StartPoint, EndPoint, FColor::Red, true, 2.0f, 1, TraceThickness);
+}
+
+void ACannon::StopTrace()
+{
+	GetWorldTimerManager().ClearTimer(TraceTimer);
 }
 
 void ACannon::ResetShootState()
@@ -113,6 +140,7 @@ void ACannon::CycleFireMode()
 void ACannon::BeginPlay()
 {
 	Super::BeginPlay();
+	
 	
 }
 

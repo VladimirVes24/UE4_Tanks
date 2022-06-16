@@ -15,7 +15,7 @@
 #include "TankPawn.generated.h"
 
 UCLASS(Blueprintable)
-class TANKS_API ATankPawn : public APawn
+class TANKS_API ATankPawn : public APawn, public IDamageTaker
 {
 	GENERATED_BODY()
 
@@ -121,10 +121,18 @@ public:
 	void SwitchWeapon();
 	void SetupCannon(TSubclassOf<ACannon> DesiredCannonType);
 	void SetupMachineGun(TSubclassOf<ACannon> DesiredMachineGunType);
+	UFUNCTION()
+    virtual void TakeDamage(FDamageData DamageData) override;
+
 	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	UFUNCTION()
+    void Die();
+    UFUNCTION()
+    void DamageTaken(float DamageValue);
+
 
 public:	
 	// Called every frame

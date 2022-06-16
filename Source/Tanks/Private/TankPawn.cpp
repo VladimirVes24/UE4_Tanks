@@ -14,6 +14,9 @@ ATankPawn::ATankPawn()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health component"));
+    HealthComponent->OnDie.AddUObject(this, &ATankPawn::Die);
+    HealthComponent->OnDamaged.AddUObject(this, &ATankPawn::DamageTaken);
 	
 	TankBodyCollisionBox = CreateDefaultSubobject<UBoxComponent>("Body Collision");
 	RootComponent = TankBodyCollisionBox;
@@ -96,6 +99,18 @@ void ATankPawn::BeginPlay()
 	//HealthWidget->UpdateHealthBar(HealthPointsCurrent, HealthPointsMax);
 }
 
+void ATankPawn::Die()
+{
+	Destroy();
+}
+
+void ATankPawn::DamageTaken(float DamageValue)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Tank %s taked damage:%f Health:%f"), *GetName(),
+    DamageValue, HealthComponent->GetHealth());
+
+}
+
 // Called every frame
 void ATankPawn::Tick(float DeltaTime)
 {
@@ -109,7 +124,7 @@ void ATankPawn::Tick(float DeltaTime)
 	RotateCannon();
 	TiltCannon();
 	
-	FireRateTimerValue = Cannon->GetTimerValue();
+	if (Cannon) FireRateTimerValue = Cannon->GetTimerValue();
 	GEngine->AddOnScreenDebugMessage(7777, 1, FColor::Blue, FString(TEXT("Clip ammo: " + FString::FromInt(ClipContains))));
 	GEngine->AddOnScreenDebugMessage(8888, 1, FColor::Blue, FString(TEXT("Ammo left: " + FString::FromInt(AmmoLeft))));
 }
@@ -203,7 +218,8 @@ void ATankPawn::TiltCannon() const
 	const FRotator ActorAbsoluteRotation = GetActorRotation();
 	const FRotator CannonAbsoluteRotation = CannonPosition->GetComponentRotation();
 	const FRotator CannonRelativeRotation = CannonAbsoluteRotation - ActorAbsoluteRotation;
-	const FRotator CurrentDifference = UKismetMathLibrary::FindLookAtRotation(TankTowerMesh->GetComponentLocation(), TankController->GetMousePosition()) - CannonAbsoluteRotation;
+	//const FRotator CurrentDifference = UKismetMathLibrary::FindLookAtRotation(TankTowerMesh->GetComponentLocation(), TankController->GetMousePosition()) - CannonAbsoluteRotation;
+	const FRotator CurrentDifference = UKismetMathLibrary::FindLookAtRotation(CannonPosition->GetComponentLocation(), TankController->GetMousePosition()) - CannonAbsoluteRotation;
 
 	FRotator NewRotation = CannonRelativeRotation;
 	if (CurrentDifference.Pitch == 0) return;
@@ -249,6 +265,11 @@ void ATankPawn::SetupMachineGun(TSubclassOf<ACannon> DesiredMachineGunType)
 	MachineGunSpawnParams.Owner = this;
 	MachineGun = GetWorld()->SpawnActor<ACannon>(MachineGunType, Transform, MachineGunSpawnParams);
 	MachineGun->AttachToComponent(MachineGunPosition, FAttachmentTransformRules::SnapToTargetIncludingScale);
+}
+
+void ATankPawn::TakeDamage(FDamageData DamageData)
+{
+	HealthComponent->TakeDamage(DamageData);
 }
 
 void ATankPawn::ChangeFireMode() const
@@ -308,6 +329,7 @@ void ATankPawn::FireCannon()
 		int ShootAmount = 1;
 		if (Cannon->Type == ECannonType::FireAuto && Cannon->BurstSize >= ClipContains) ShootAmount = ClipContains;
 		if (Cannon->Type == ECannonType::FireAuto && Cannon->BurstSize < ClipContains) ShootAmount = Cannon->BurstSize;
+		if (Cannon->Type == ECannonType::FireTrace) ShootAmount = 0;
 		if (!Cannon->Shoot(ShootAmount)) return;
 		ClipContains -= ShootAmount;
 		//GEngine->AddOnScreenDebugMessage(7777, 10000, FColor::Yellow, FString(TEXT("Clip ammo: " + FString::FromInt(ClipContains))));
@@ -337,7 +359,11 @@ void ATankPawn::FireMachineGun()
 
 void ATankPawn::OnShootStop()
 {
-	GetWorldTimerManager().ClearTimer(MachineGunTimerHandle);
+	if (!bSwitchedToSecondary && Cannon && (Cannon->Type == ECannonType::FireTrace))
+	{
+		Cannon->StopTrace();
+	}
+	else if (bSwitchedToSecondary && MachineGun) GetWorldTimerManager().ClearTimer(MachineGunTimerHandle);
 }
 
 

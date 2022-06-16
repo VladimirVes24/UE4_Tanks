@@ -36,6 +36,12 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Fire params")
 	float FireRate = 1.0f;
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category="Fire params")
+	float TracePulsesPerSecond = 70.0f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Fire params")
+	float TraceDamagePerSecond = 20.0f;
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category="Fire params")
+	float TraceThickness = 30.0f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Fire params")
 	int BurstSize = 4;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Fire params")
@@ -51,7 +57,9 @@ public:
 	bool Shoot(int ShootAmount);
 	void ShootBurst();
 	//void ShootContinuously();
+	void StartTrace();
 	void ShootTrace();
+	void StopTrace();
 	void CycleFireMode();
 	bool IsReadyToFire();
 	
@@ -67,7 +75,7 @@ public:
 
 private:
 	void ResetShootState();
-	FTimerHandle ReloadTimer, ShootRateTimer, ShootingTimer;
+	FTimerHandle ReloadTimer, ShootRateTimer, ShootingTimer, TraceTimer;
 
 	bool bReadyToShoot = true;
 	int CallTracker = 0;
