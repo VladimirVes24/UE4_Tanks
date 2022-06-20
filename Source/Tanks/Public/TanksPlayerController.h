@@ -22,6 +22,7 @@ public:
 	void OnTryingToMoveForward(float InputPushScale);
 	void OnTryingToMoveRight(float InputPushScale);
 	void OnTryingToRotateRight(float InputPushScale);
+	void OnTryingToRotateTower(float InputPushScale);
 	void OnTryingToChangeFireRate();
 	void OnTryingToSwitchWeapon();
 	void OnShoot();

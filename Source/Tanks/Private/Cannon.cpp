@@ -6,6 +6,8 @@
 #include "DamageTaker.h"
 #include "DrawDebugHelpers.h"
 #include "GameStructs.h"
+#include "Components/AudioComponent.h"
+#include "Particles/ParticleSystemComponent.h"
 
 
 // Sets default values
@@ -26,6 +28,11 @@ ACannon::ACannon()
 	ProjectileSpawnPoint = CreateDefaultSubobject<UArrowComponent>("ProjectileSpawnPoint");
 	ProjectileSpawnPoint->SetupAttachment(CannonMesh);
 
+	ShootEffect = CreateDefaultSubobject<UParticleSystemComponent>("Shoot Effect");
+	ShootEffect->SetupAttachment(ProjectileSpawnPoint);
+
+	AudioEffect = CreateDefaultSubobject<UAudioComponent>("Shoot Audio");
+	AudioEffect->SetupAttachment(ProjectileSpawnPoint);
 	
 }
 
@@ -38,7 +45,7 @@ bool ACannon::Shoot(int ShootAmount)
 	{
 	case ECannonType::FireProjectile:
 		//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, FString(TEXT("Bum")));
-		GetWorld()->SpawnActor<AProjectile>(ProjectileClass, ProjectileSpawnPoint->GetComponentLocation(), ProjectileSpawnPoint->GetComponentRotation());
+		ShootProjectile();
 		break;
 	case ECannonType::FireTrace:
 		//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, FString(TEXT("Bum")));
@@ -49,7 +56,7 @@ bool ACannon::Shoot(int ShootAmount)
 		GetWorldTimerManager().SetTimer(ShootRateTimer, this, &ACannon::ShootBurst, FireRate/BurstSize, true);
 		break;
 	case ECannonType::FireMachineGun:
-		GetWorld()->SpawnActor<AProjectile>(ProjectileClass, ProjectileSpawnPoint->GetComponentLocation(), ProjectileSpawnPoint->GetComponentRotation());
+		LastProjectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, ProjectileSpawnPoint->GetComponentLocation(), ProjectileSpawnPoint->GetComponentRotation());
 		break;
 	}
 	bReadyToShoot = false;
@@ -57,13 +64,38 @@ bool ACannon::Shoot(int ShootAmount)
 	return true;
 }
 
+void ACannon::ShootProjectile()
+{
+	LastProjectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, ProjectileSpawnPoint->GetComponentLocation(), ProjectileSpawnPoint->GetComponentRotation());
+	ShootEffect->ActivateSystem();
+	AudioEffect->Play();
+	if(GetOwner() && GetOwner() ==
+	GetWorld()->GetFirstPlayerController()->GetPawn())
+	{
+		if(ShootForceEffect)
+		{
+			FForceFeedbackParameters shootForceEffectParams;
+			shootForceEffectParams.bLooping = false;
+			shootForceEffectParams.Tag = "shootForceEffectParams";
+			GetWorld()->GetFirstPlayerController()->ClientPlayForceFeedback(ShootForceEffect,
+			shootForceEffectParams);
+		}
+		if(ShootShake)
+		{
+			GetWorld()->GetFirstPlayerController()->ClientStartCameraShake(ShootShake);
+		}
+	}
+}
+
 
 void ACannon::ShootBurst()
 {
 	--CallTracker;
 	//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Purple, FString(TEXT("Bum")));
-	GetWorld()->SpawnActor<AProjectile>(ProjectileClass, ProjectileSpawnPoint->GetComponentLocation(), ProjectileSpawnPoint->GetComponentRotation());
+	LastProjectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, ProjectileSpawnPoint->GetComponentLocation(), ProjectileSpawnPoint->GetComponentRotation());
 	if (CallTracker <=0 ) GetWorldTimerManager().ClearTimer(ShootRateTimer);
+	ShootEffect->ActivateSystem();
+	AudioEffect->Play();
 }
 
 void ACannon::StartTrace()
@@ -132,6 +164,8 @@ void ACannon::CycleFireMode()
 			Type = ECannonType::FireProjectile;
 		GEngine->AddOnScreenDebugMessage(555, 3, FColor::White, FString::Printf(TEXT("Fire mode set to Single")));
 			break;
+		default:
+			break;
 	}
 
 }
@@ -160,5 +194,10 @@ void ACannon::Tick(float DeltaTime)
 float ACannon::GetTimerValue() const
 {
 	return GetWorld()->GetTimerManager().GetTimerElapsed(ReloadTimer);
+}
+
+AProjectile* ACannon::GetLastProjectilePointer() const
+{
+	return LastProjectile;
 }
 

@@ -6,6 +6,8 @@
 #include "Projectile.h"
 #include "Components/ArrowComponent.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/ForceFeedbackEffect.h"
+#include "MatineeCameraShake.h"
 #include "Cannon.generated.h"
 
 UENUM(BlueprintType)
@@ -55,6 +57,7 @@ public:
 	TSubclassOf<AProjectile> ProjectileClass;
 	
 	bool Shoot(int ShootAmount);
+	void ShootProjectile();
 	void ShootBurst();
 	//void ShootContinuously();
 	void StartTrace();
@@ -67,11 +70,22 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
+	UParticleSystemComponent* ShootEffect;
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
+	UAudioComponent* AudioEffect;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+	UForceFeedbackEffect * ShootForceEffect;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UMatineeCameraShake> ShootShake;
+	
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	float GetTimerValue() const;
+	AProjectile* GetLastProjectilePointer() const;
+
 
 private:
 	void ResetShootState();
@@ -79,6 +93,9 @@ private:
 
 	bool bReadyToShoot = true;
 	int CallTracker = 0;
+	UPROPERTY()
+	AProjectile* LastProjectile = nullptr;
+	
 };
 
 

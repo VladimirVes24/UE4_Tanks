@@ -14,6 +14,7 @@ void ATanksPlayerController::SetupInputComponent()
 	InputComponent->BindAxis("MoveForward", this, &ATanksPlayerController::OnTryingToMoveForward);
 	InputComponent->BindAxis("MoveRight", this, &ATanksPlayerController::OnTryingToMoveRight);
 	InputComponent->BindAxis("RotationRight", this, &ATanksPlayerController::OnTryingToRotateRight);
+	InputComponent->BindAxis("RotateTowerRight", this, &ATanksPlayerController::OnTryingToRotateTower);
 	InputComponent->BindAction("Shoot", IE_Pressed, this, &ATanksPlayerController::OnShoot);
 	InputComponent->BindAction("Shoot", IE_Released, this, &ATanksPlayerController::OnShootStop);
 	InputComponent->BindAction("CycleFireMode", IE_Pressed, this, &ATanksPlayerController::OnTryingToChangeFireRate);
@@ -44,6 +45,12 @@ void ATanksPlayerController::OnTryingToRotateRight(float InputPushScale)
 {
 	if (PlayerTank)
 		PlayerTank->SetRotateRightScale(InputPushScale);
+}
+
+void ATanksPlayerController::OnTryingToRotateTower(float InputPushScale)
+{
+	if (PlayerTank)
+		PlayerTank->SetRotateTowerRightScale(InputPushScale);
 }
 
 void ATanksPlayerController::OnTryingToChangeFireRate()

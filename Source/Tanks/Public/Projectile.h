@@ -11,10 +11,16 @@ UCLASS()
 class TANKS_API AProjectile : public AActor
 {
 	GENERATED_BODY()
+
+	DECLARE_EVENT_OneParam(UHealthComponent, FOnKill, int)
 	
 public:	
 	// Sets default values for this actor's properties
 	AProjectile();
+
+	FOnKill OnKill;
+	//UFUNCTION()
+	//void GetScoreForKill(AActor OnDestroyed, AActor* DestroyedActor);
 	
 protected:
 	// Called when the game starts or when spawned
@@ -36,6 +42,7 @@ protected:
 	float Damage = 10.0f;
 private:
 	FTimerHandle MovementTimerHandle;
+	int EarnedScore = 0;
 
 	UFUNCTION()
 	void OnMeshOverlapBegin(UPrimitiveComponent* OverlappedComponent,

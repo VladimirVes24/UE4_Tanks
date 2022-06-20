@@ -10,6 +10,7 @@
 #include "Components/WidgetComponent.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "MatineeCameraShake.h"	
 #include "HealthComponent.h"
 #include "DamageTaker.h"
 #include "TankPawn.generated.h"
@@ -64,6 +65,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
 	TSubclassOf<ACannon> MachineGunType;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UMatineeCameraShake> ShootShake;
 	
 	UPROPERTY()
 	ACannon* Cannon;
@@ -100,13 +104,19 @@ public:
 	int AmmoLeft = 0;
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
 	int ClipContains = 0;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Score")
+	int TotalScore;
 	
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Fire params")
 	float FireRateTimerValue = 0;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
+	UParticleSystemComponent* DeathExplosionEffect;
 	
 	void SetMoveForwardPushScale(float Scale);
 	void SetMoveRightPushScale(float Scale);
 	void SetRotateRightScale(float Scale);
+	void SetRotateTowerRightScale(float Scale);
 
 	int GetClipContains() const;
 
@@ -122,16 +132,32 @@ public:
 	void SetupCannon(TSubclassOf<ACannon> DesiredCannonType);
 	void SetupMachineGun(TSubclassOf<ACannon> DesiredMachineGunType);
 	UFUNCTION()
-    virtual void TakeDamage(FDamageData DamageData) override;
+	virtual void TakeDamage(FDamageData DamageData) override;
+	UFUNCTION()
+	void IncreaseTotalScore(int InputScore);
+	UFUNCTION()
+	TArray<FVector> GetPatrollingPoints() { return PatrollingPoints; }
+	UFUNCTION()
+	float GetMovementAccuracy() { return MovementAccuracy; }
+	FVector GetEyesPosition();
 
 	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void Destroyed() override;
 	UFUNCTION()
     void Die();
+	UFUNCTION()
+	void ShakeCamera();
     UFUNCTION()
     void DamageTaken(float DamageValue);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI | MoveParams | Patrolling", meta = (MakeEditWidget = true))
+	TArray<FVector> PatrollingPoints;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI | MoveParams | Patrolling")
+	float MovementAccuracy = 300.0f;
+	
+
 
 
 public:	
@@ -140,8 +166,12 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	void RotateCannon(FVector TargetPosition);
 
+	UFUNCTION()
+	FVector GetTurretForwardVector();
 	
+
 
 private:
 	float TargetForwardPushScale = 0;
@@ -166,7 +196,8 @@ private:
 	
     void MoveTank(float DeltaTime);
 	void RotateTank(float DeltaTime);
-	void RotateCannon() const;
+	
+	void RotateCannonViaGamepad(float DeltaTime);
 	void TiltCannon()const;
 	
 
@@ -175,4 +206,5 @@ private:
 	class ATanksPlayerController* TankController;
 	
 };
+
 
