@@ -13,6 +13,7 @@
 #include "MatineeCameraShake.h"	
 #include "HealthComponent.h"
 #include "DamageTaker.h"
+#include "Engine/TargetPoint.h"
 #include "TankPawn.generated.h"
 
 UCLASS(Blueprintable)
@@ -112,6 +113,8 @@ public:
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
 	UParticleSystemComponent* DeathExplosionEffect;
+
+	
 	
 	void SetMoveForwardPushScale(float Scale);
 	void SetMoveRightPushScale(float Scale);
@@ -135,12 +138,14 @@ public:
 	virtual void TakeDamage(FDamageData DamageData) override;
 	UFUNCTION()
 	void IncreaseTotalScore(int InputScore);
-	UFUNCTION()
-	TArray<FVector> GetPatrollingPoints() { return PatrollingPoints; }
+
+	
 	UFUNCTION()
 	float GetMovementAccuracy() { return MovementAccuracy; }
 	FVector GetEyesPosition();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI | MoveParams | Patrolling", meta = (MakeEditWidget = true))
+	TArray<ATargetPoint*> PatrollingPoints;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -152,8 +157,7 @@ protected:
 	void ShakeCamera();
     UFUNCTION()
     void DamageTaken(float DamageValue);
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI | MoveParams | Patrolling", meta = (MakeEditWidget = true))
-	TArray<FVector> PatrollingPoints;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI | MoveParams | Patrolling")
 	float MovementAccuracy = 300.0f;
 	
@@ -170,6 +174,11 @@ public:
 
 	UFUNCTION()
 	FVector GetTurretForwardVector();
+	UFUNCTION()
+	TArray<FVector> GetPatrollingPoints();
+	void SetPatrollingPoints(TArray<ATargetPoint*> NewPatrollingPoints);
+	
+
 	
 
 

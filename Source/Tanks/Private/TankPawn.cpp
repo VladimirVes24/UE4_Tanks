@@ -59,6 +59,8 @@ ATankPawn::ATankPawn()
 	DeathExplosionEffect = CreateDefaultSubobject<UParticleSystemComponent>("Explosion of death");
 	DeathExplosionEffect->SetupAttachment(RootComponent);
 
+	
+
 	//ShootShake = CreateDefaultSubobject<UMatineeCameraShake>("CameraShakeEffect");
 }
 
@@ -96,6 +98,7 @@ int ATankPawn::GetClipContains() const
 void ATankPawn::BeginPlay()
 {
 	Super::BeginPlay();
+	DeathExplosionEffect->DeactivateSystem();
 
 	TankController = Cast<ATanksPlayerController>(GetController());
 	
@@ -177,6 +180,21 @@ void ATankPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 FVector ATankPawn::GetTurretForwardVector()
 {
 	return TankTowerMesh->GetForwardVector();
+}
+
+TArray<FVector> ATankPawn::GetPatrollingPoints()
+{
+	TArray<FVector> points;
+    for (ATargetPoint* point : PatrollingPoints)
+    {
+		points.Add(point->GetActorLocation());
+    }
+    return points;
+}
+
+void ATankPawn::SetPatrollingPoints(TArray<ATargetPoint*> NewPatrollingPoints)
+{
+	PatrollingPoints = NewPatrollingPoints;
 }
 
 void ATankPawn::MoveTank(float DeltaTime)

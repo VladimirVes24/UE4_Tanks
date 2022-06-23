@@ -174,6 +174,7 @@ void ACannon::CycleFireMode()
 void ACannon::BeginPlay()
 {
 	Super::BeginPlay();
+	ShootEffect->Deactivate();
 	
 	
 }
