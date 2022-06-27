@@ -57,6 +57,7 @@ bool ACannon::Shoot(int ShootAmount)
 		break;
 	case ECannonType::FireMachineGun:
 		LastProjectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, ProjectileSpawnPoint->GetComponentLocation(), ProjectileSpawnPoint->GetComponentRotation());
+		if (LastProjectile) LastProjectile->Start();
 		break;
 	}
 	bReadyToShoot = false;
@@ -67,6 +68,7 @@ bool ACannon::Shoot(int ShootAmount)
 void ACannon::ShootProjectile()
 {
 	LastProjectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, ProjectileSpawnPoint->GetComponentLocation(), ProjectileSpawnPoint->GetComponentRotation());
+	if (LastProjectile) LastProjectile->Start();
 	ShootEffect->ActivateSystem();
 	AudioEffect->Play();
 	if(GetOwner() && GetOwner() ==
@@ -93,6 +95,7 @@ void ACannon::ShootBurst()
 	--CallTracker;
 	//GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Purple, FString(TEXT("Bum")));
 	LastProjectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, ProjectileSpawnPoint->GetComponentLocation(), ProjectileSpawnPoint->GetComponentRotation());
+	if (LastProjectile) LastProjectile->Start();
 	if (CallTracker <=0 ) GetWorldTimerManager().ClearTimer(ShootRateTimer);
 	ShootEffect->ActivateSystem();
 	AudioEffect->Play();

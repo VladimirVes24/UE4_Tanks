@@ -161,9 +161,9 @@ void ATankPawn::Tick(float DeltaTime)
 	TiltCannon();
 	if(TankController)
 	{
-		//FVector mousePos = TankController->GetMousePosition();
-		//RotateCannon(mousePos);
-		RotateCannonViaGamepad(DeltaTime);
+		FVector mousePos = TankController->GetMousePosition();
+		RotateCannon(mousePos);
+		//RotateCannonViaGamepad(DeltaTime);
 	}
 	
 	if (Cannon) FireRateTimerValue = Cannon->GetTimerValue();

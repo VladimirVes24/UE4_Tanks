@@ -33,12 +33,15 @@ AProjectile::AProjectile()
 //	if (EarnedScore != 0 && OnKill.IsBound()) OnKill.Broadcast(EarnedScore);
 //}
 
+void AProjectile::Start()
+{
+	GetWorld()->GetTimerManager().SetTimer(MovementTimerHandle, this, &AProjectile::MoveTick, MoveRate, true);
+}
+
 // Called when the game starts or when spawned
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-
-	GetWorld()->GetTimerManager().SetTimer(MovementTimerHandle, this, &AProjectile::MoveTick, MoveRate, true);
 }
 
 void AProjectile::OnMeshOverlapBegin(UPrimitiveComponent* OverlappedComponent,
@@ -73,11 +76,20 @@ void AProjectile::OnMeshOverlapBegin(UPrimitiveComponent* OverlappedComponent,
 			DamageTakerActor->TakeDamage(DamageData);
 			//const int ScoreForKill = 
 			if (!OtherActor && OnKill.IsBound()) OnKill.Broadcast(EarnedScore);
+		}
+    	UPrimitiveComponent* mesh = Cast<UPrimitiveComponent>(OtherActor->GetRootComponent());
+        if(mesh)
+        {
+			if(mesh->IsSimulatingPhysics())
+			{
+				 FVector forceVector = OtherActor->GetActorLocation() - GetActorLocation();
+				 forceVector.Normalize();
+				 mesh->AddImpulse(forceVector* PushForce, NAME_None,false);
+			}
+        }
+    	if (IsExplosionEnabled) Explode();
+		Destroy();
     	
-    }
-    //
-    	//if
-    Destroy();
     }
 
 
@@ -91,6 +103,64 @@ void AProjectile::MoveTick()
 {
 	const auto Location = GetActorLocation();
 	SetActorLocation(Location + GetActorForwardVector()*MoveRate*MoveSpeed, true);
+}
+
+void AProjectile::Explode()
+{
+	FVector startPos = GetActorLocation();
+	FVector endPos = startPos + FVector(0.1f);
+	FCollisionShape Shape = FCollisionShape::MakeSphere(ExplodeRadius);
+	FCollisionQueryParams params = FCollisionQueryParams::DefaultQueryParam;
+	params.AddIgnoredActor(this);
+	params.bTraceComplex = true;
+	params.TraceTag = "Explode Trace";
+	TArray<FHitResult> AttackHit;
+	FQuat Rotation = FQuat::Identity;
+	
+	bool sweepResult = GetWorld()->SweepMultiByChannel
+	(
+	AttackHit,
+	startPos,
+	endPos,
+	Rotation,
+	ECC_Visibility,
+	Shape,
+	params
+	);
+	
+	GetWorld()->DebugDrawTraceTag = "Explode Trace";
+	if(sweepResult)
+	{
+		for(FHitResult hitResult : AttackHit)
+		{
+			AActor* otherActor = hitResult.GetActor();
+			if(!otherActor)
+				continue;
+			IDamageTaker * damageTakerActor = Cast<IDamageTaker>(otherActor);
+			if(damageTakerActor)
+			{
+				FDamageData damageData;
+				damageData.DamageValue = Damage;
+				damageData.Instigator = GetOwner();
+				damageData.DamageMaker = this;
+				damageTakerActor->TakeDamage(damageData);
+			}
+			else
+			{
+				UPrimitiveComponent* mesh =	Cast<UPrimitiveComponent>(otherActor->GetRootComponent());
+				if(mesh)
+				{
+					if(mesh->IsSimulatingPhysics())
+					{
+						FVector forceVector = otherActor->GetActorLocation() -
+						GetActorLocation();
+						forceVector.Normalize();
+						mesh->AddForce(forceVector * PushForce, NAME_None, true);
+					}
+				}
+			}
+		}
+	}
 }
 
 // Called every frame

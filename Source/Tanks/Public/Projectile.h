@@ -14,6 +14,7 @@ class TANKS_API AProjectile : public AActor
 
 	DECLARE_EVENT_OneParam(UHealthComponent, FOnKill, int)
 	
+	
 public:	
 	// Sets default values for this actor's properties
 	AProjectile();
@@ -21,10 +22,14 @@ public:
 	FOnKill OnKill;
 	//UFUNCTION()
 	//void GetScoreForKill(AActor OnDestroyed, AActor* DestroyedActor);
+	virtual void Start();
 	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Damage")
+    float PushForce = 1000;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category="Components")
 	USphereComponent* Collision;
@@ -40,6 +45,13 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Projectile")
 	float Damage = 10.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Projectile")
+	bool IsExplosionEnabled = true;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Projectile")
+	float ExplodeRadius = 500;
+	
 private:
 	FTimerHandle MovementTimerHandle;
 	int EarnedScore = 0;
@@ -50,6 +62,8 @@ private:
 	const FHitResult& SweepResult);
 
 	UFUNCTION()
-	void MoveTick();
+	virtual void MoveTick();
+	UFUNCTION()
+	virtual void Explode();
 
 };
