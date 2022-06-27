@@ -101,7 +101,7 @@ void APhysicsProjectile::Explode()
 				{
 					FVector forceVector = otherActor->GetActorLocation() - GetActorLocation();
 					forceVector.Normalize();
-					mesh->AddImpulse(forceVector * PushForce, NAME_None, true);
+					mesh->AddForce(forceVector * PushForce, NAME_None, true);
 				}
 			}
 			
