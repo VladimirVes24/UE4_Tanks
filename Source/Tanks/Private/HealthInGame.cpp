@@ -3,7 +3,7 @@
 
 #include "HealthInGame.h"
 
-void UHealthInGame::UpdateHealthBar(float CurrentHealth, float MaxHealth)
+void UHealthInGame::UpdateHealthBar(float HealthState)
 {
-	HealthBar->SetPercent(CurrentHealth/MaxHealth);
+	HealthBar->SetPercent(HealthState);
 }

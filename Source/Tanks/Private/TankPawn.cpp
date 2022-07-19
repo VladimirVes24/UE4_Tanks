@@ -109,10 +109,8 @@ void ATankPawn::BeginPlay()
 	IncreaseTotalScore(0);
 	AmmoLeft = AmmoStockSize;
 	ClipContains = ClipSize;
-	//GEngine->AddOnScreenDebugMessage(8888, 1, FColor::Yellow, FString(TEXT("Ammo left: " + FString::FromInt(AmmoLeft))));
-	//GEngine->AddOnScreenDebugMessage(7777, 1, FColor::Yellow, FString(TEXT("Clip ammo: " + FString::FromInt(ClipContains))));
 	HealthPointsCurrent = HealthPointsMax;
-	//HealthWidget->UpdateHealthBar(HealthPointsCurrent, HealthPointsMax);
+	CurrentHealthState = HealthComponent->GetHealthState();
 }
 
 void ATankPawn::Destroyed()
@@ -142,9 +140,8 @@ void ATankPawn::ShakeCamera()
 
 void ATankPawn::DamageTaken(float DamageValue)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Tank %s taked damage:%f Health:%f"), *GetName(),
-    DamageValue, HealthComponent->GetHealth());
-
+	UE_LOG(LogTemp, Warning, TEXT("Tank %s taked damage:%f Health:%f"), *GetName(), DamageValue, HealthComponent->GetHealth());
+	CurrentHealthState = HealthComponent->GetHealthState();
 }
 
 // Called every frame

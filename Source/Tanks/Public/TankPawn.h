@@ -107,7 +107,8 @@ public:
 	int ClipContains = 0;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Score")
 	int TotalScore;
-	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
+	float CurrentHealthState;
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Fire params")
 	float FireRateTimerValue = 0;
 
@@ -122,6 +123,7 @@ public:
 	void SetRotateTowerRightScale(float Scale);
 
 	int GetClipContains() const;
+
 
 	void Shoot();
 	void OnShootStop();

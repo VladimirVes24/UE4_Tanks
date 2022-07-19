@@ -49,6 +49,9 @@ protected:
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
 	UParticleSystemComponent* DeathExplosionEffect;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
+    float CurrentHealthState;
 
 	UPROPERTY()
 	ACannon* Cannon;
@@ -68,6 +71,7 @@ protected:
 	float GrantedScoreOnDeath = 10;
 	const FString BodyMeshPath ="StaticMesh'/Game/CSC/Meshes/SM_CSC_Tower1.SM_CSC_Tower1'";
 	const FString TowerMeshPath ="StaticMesh'/Game/CSC/Meshes/SM_CSC_Gun1.SM_CSC_Gun1'";
+	
 
 	bool IsPlayerSeen();
 

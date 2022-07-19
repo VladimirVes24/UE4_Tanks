@@ -16,7 +16,7 @@ class TANKS_API UHealthInGame : public UUserWidget
 	GENERATED_BODY()
 public:
 	UFUNCTION(BlueprintCallable)
-	void UpdateHealthBar(float CurrentHealth, float MaxHealth);
+	void UpdateHealthBar(float HealthState);
 protected:
 	UPROPERTY(BlueprintReadWrite, meta=(BindWidget))
 	UProgressBar* HealthBar;

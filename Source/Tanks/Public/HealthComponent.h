@@ -25,6 +25,7 @@ public:
 
 	void TakeDamage(FDamageData DamageData);
     float GetHealth() const;
+	UFUNCTION(BlueprintCallable)
     float GetHealthState() const;
     void AddHealth(float AdditionalHealthValue);
 
@@ -36,7 +37,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Health values")
     float MaxHealth = 100;
 	
-    UPROPERTY()
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Health values")
     float CurrentHealth;
 
 

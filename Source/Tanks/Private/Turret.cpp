@@ -52,7 +52,7 @@ ATurret::ATurret()
 void ATurret::BeginPlay()
 {
 	Super::BeginPlay();
-
+	CurrentHealthState = 1;
 	FActorSpawnParameters Params;
     Params.Owner = this;
     Cannon = GetWorld()->SpawnActor<ACannon>(CannonType, Params);
@@ -168,8 +168,8 @@ void ATurret::Die()
 
 void ATurret::DamageTaken(float DamageValue)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Turret %s took damage:%f  Current health:%f"), *GetName(),
-	DamageValue, HealthComponent->GetHealth());
+	UE_LOG(LogTemp, Warning, TEXT("Turret %s took damage:%f  Current health:%f"), *GetName(),DamageValue, HealthComponent->GetHealth());
+	CurrentHealthState = HealthComponent->GetHealthState();
 }
 
 FVector ATurret::GetEyesPosition()
