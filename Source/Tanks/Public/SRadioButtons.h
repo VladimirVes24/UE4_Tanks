@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "RadioButtonsWidgetStyle.h"
 #include "Widgets/SCompoundWidget.h"
 
 /**
@@ -18,6 +19,8 @@ public:
 	SLATE_ATTRIBUTE(int32, Count);
 	
 	SLATE_EVENT(FOnRadioButtonChanged, OnRadioButtonChanged);
+
+	SLATE_STYLE_ARGUMENT(FRadioButtonsStyle, Style);
 	
 	SLATE_END_ARGS()
 
@@ -37,4 +40,7 @@ private:
 	void OnCheckboxStateChanged(ECheckBoxState NewState, int32 InIndex);
 
 	TSharedPtr<SVerticalBox> RadioBox;
+
+	const FCheckBoxStyle* CheckBoxStyle = nullptr;
+	const FTextBlockStyle* TextStyle = nullptr;
 };

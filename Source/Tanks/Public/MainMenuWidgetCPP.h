@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "URadioButtons.h"
 #include "Blueprint/UserWidget.h"
 #include "MainMenuWidgetCPP.generated.h"
 
@@ -15,7 +16,7 @@ class TANKS_API UMainMenuWidgetCPP : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	
+	virtual void NativePreConstruct() override;
 	virtual void NativeConstruct() override;
 
 	virtual void NativeDestruct() override;
@@ -35,6 +36,11 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	UButton* BackToMenuButton;
+
+	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	UURadioButtons* RadioButtons;
+
+	
 
 	UFUNCTION()
 	void OnQuitClicked();

@@ -8,7 +8,10 @@ BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 void SRadioButtons::Construct(const FArguments& InArgs)
 {
 	OnRadioButtonChanged = InArgs._OnRadioButtonChanged;
+	CheckBoxStyle = &InArgs._Style->CheckBoxStyle;
+	TextStyle = &InArgs._Style->TextStyle;
 	TAttribute<int32> Count = InArgs._Count;
+	
 
 	Count.Get();
 	
@@ -37,9 +40,11 @@ TSharedRef<SWidget> SRadioButtons::CreateCheckbox(int32 InIndex, FString InText)
 	return SNew(SCheckBox)
 		.IsChecked_Raw(this, &SRadioButtons::IsChecked, InIndex)
 		.OnCheckStateChanged_Raw(this, &SRadioButtons::OnCheckboxStateChanged, InIndex)
+		.Style(CheckBoxStyle)
 		[
 			SNew(STextBlock)
 			.Text(FText::FromString(InText))
+			.TextStyle(TextStyle)
 		];
 	
 }

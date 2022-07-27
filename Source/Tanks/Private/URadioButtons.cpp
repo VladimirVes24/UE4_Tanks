@@ -16,6 +16,7 @@ TSharedRef<SWidget> UURadioButtons::RebuildWidget()
 	RadioButtons = SNew(SRadioButtons)
 		.OnRadioButtonChanged_UObject(this, &ThisClass::OnRadioButtonsChangedFunc)
 		.Count_UObject(this, &ThisClass::GetCount)
+		.Style(&WidgetStyle)
 		;
 	return RadioButtons.ToSharedRef();
 }

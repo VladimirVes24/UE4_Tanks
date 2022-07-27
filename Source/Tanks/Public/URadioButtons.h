@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "RadioButtonsWidgetStyle.h"
 #include "Components/Widget.h"
 #include "URadioButtons.generated.h"
 
@@ -24,7 +25,8 @@ public:
 
 	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 
-	
+	UPROPERTY(EditAnywhere, Category = Appearance, meta=(DisplayName=Style))
+	FRadioButtonsStyle WidgetStyle;
 
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;

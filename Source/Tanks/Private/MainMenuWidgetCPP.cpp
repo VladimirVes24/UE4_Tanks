@@ -2,8 +2,38 @@
 
 
 #include "MainMenuWidgetCPP.h"
+
+#include "MenuButtonWidgetStyle.h"
+#include "MyButtonStyle.h"
+#include "MyStyle.h"
 #include  "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
+
+void UMainMenuWidgetCPP::NativePreConstruct()
+{
+	Super::NativePreConstruct();
+
+	if(PlayButton)
+	{
+		PlayButton->WidgetStyle = FMyButtonStyle::Get().GetWidgetStyle<FButtonStyle>("WS_MenuButtonsStyle2");
+	}
+	if(QuitButton)
+	{
+		QuitButton->WidgetStyle = FMyButtonStyle::Get().GetWidgetStyle<FButtonStyle>("WS_MenuButtonsStyle2");
+	}
+	if(OptionsButton)
+	{
+		OptionsButton->WidgetStyle = FMyButtonStyle::Get().GetWidgetStyle<FButtonStyle>("WS_MenuButtonsStyle2");
+	}
+	if(BackToMenuButton)
+	{
+		BackToMenuButton->WidgetStyle =  FMyButtonStyle::Get().GetWidgetStyle<FButtonStyle>("WS_MenuButtonsStyle2");
+	}
+	if(RadioButtons)
+	{
+		RadioButtons->WidgetStyle = FMyStyle::Get().GetWidgetStyle<FRadioButtonsStyle>("WS_RadioButtonsDefault");
+	}
+}
 
 void UMainMenuWidgetCPP::NativeConstruct()
 {
