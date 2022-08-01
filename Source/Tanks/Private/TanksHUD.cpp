@@ -13,6 +13,8 @@ ATanksHUD::ATanksHUD()
 void ATanksHUD::BeginPlay()
 {
 	Super::BeginPlay();
+
+	//ShowWidget(EWidgetID::Wid_TankList, 0);
 }
 
 void ATanksHUD::Tick(float DeltaTime)

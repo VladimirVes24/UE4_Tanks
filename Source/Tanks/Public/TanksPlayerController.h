@@ -36,6 +36,10 @@ public:
 
 	FVector GetMousePosition() const { return MouseWorldPosition; }
 
+	FSimpleMulticastDelegate OnMouseButtonUp;
+	
+protected:
+	void OnLeftMouseButtonUp();
 private:
 	UPROPERTY()
 	ATankPawn* PlayerTank;

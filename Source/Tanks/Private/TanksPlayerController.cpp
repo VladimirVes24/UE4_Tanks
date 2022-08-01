@@ -11,16 +11,21 @@ void ATanksPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 	//Binding axis "MoveForward" from UE4 to call OnMoveForward
-	InputComponent->BindAxis("MoveForward", this, &ATanksPlayerController::OnTryingToMoveForward);
-	InputComponent->BindAxis("MoveRight", this, &ATanksPlayerController::OnTryingToMoveRight);
-	InputComponent->BindAxis("RotationRight", this, &ATanksPlayerController::OnTryingToRotateRight);
-	InputComponent->BindAxis("RotateTowerRight", this, &ATanksPlayerController::OnTryingToRotateTower);
-	InputComponent->BindAction("Shoot", IE_Pressed, this, &ATanksPlayerController::OnShoot);
-	InputComponent->BindAction("Shoot", IE_Released, this, &ATanksPlayerController::OnShootStop);
-	InputComponent->BindAction("CycleFireMode", IE_Pressed, this, &ATanksPlayerController::OnTryingToChangeFireRate);
-	InputComponent->BindAction("Flip", IE_Pressed, this, &ATanksPlayerController::OnFlip);
-	InputComponent->BindAction("FireSpecial", IE_Pressed, this, &ATanksPlayerController::OnShootSpecial);
-	InputComponent->BindAction("SwitchWeapon", IE_Pressed, this, &ATanksPlayerController::OnTryingToSwitchWeapon);
+	if (InputComponent)
+	{
+		InputComponent->BindAxis("MoveForward", this, &ATanksPlayerController::OnTryingToMoveForward);
+		InputComponent->BindAxis("MoveRight", this, &ATanksPlayerController::OnTryingToMoveRight);
+		InputComponent->BindAxis("RotationRight", this, &ATanksPlayerController::OnTryingToRotateRight);
+		InputComponent->BindAxis("RotateTowerRight", this, &ATanksPlayerController::OnTryingToRotateTower);
+		InputComponent->BindAction("Shoot", IE_Pressed, this, &ATanksPlayerController::OnShoot);
+		InputComponent->BindAction("Shoot", IE_Released, this, &ATanksPlayerController::OnShootStop);
+		InputComponent->BindAction("CycleFireMode", IE_Pressed, this, &ATanksPlayerController::OnTryingToChangeFireRate);
+		InputComponent->BindAction("Flip", IE_Pressed, this, &ATanksPlayerController::OnFlip);
+		InputComponent->BindAction("FireSpecial", IE_Pressed, this, &ATanksPlayerController::OnShootSpecial);
+		InputComponent->BindAction("SwitchWeapon", IE_Pressed, this, &ATanksPlayerController::OnTryingToSwitchWeapon);
+		InputComponent->BindKey(EKeys::LeftMouseButton, IE_Released, this, &ATanksPlayerController::OnLeftMouseButtonUp);
+	}
+	
 
 	bShowMouseCursor = true;
 }
@@ -117,4 +122,9 @@ void ATanksPlayerController::Tick(float DeltaSeconds)
 	//GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, false, Result);
 	//DrawDebugSphere(GetWorld(), Result.ImpactPoint, 3, 16, FColor::Blue);
 	
+}
+
+void ATanksPlayerController::OnLeftMouseButtonUp()
+{
+	OnMouseButtonUp.Broadcast();
 }

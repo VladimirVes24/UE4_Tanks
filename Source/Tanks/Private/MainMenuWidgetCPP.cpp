@@ -6,7 +6,7 @@
 #include "MenuButtonWidgetStyle.h"
 #include "MyButtonStyle.h"
 #include "MyStyle.h"
-#include  "Components/Button.h"
+#include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 
 void UMainMenuWidgetCPP::NativePreConstruct()

@@ -14,6 +14,8 @@ enum class EWidgetID : uint8
 	Wid_GameOverMenu = 0x2,
 	Wid_PauseMenu = 0x3,
 	Wid_GameHud = 0x4,
+	Wid_TankList = 0x5,
+	Wid_SpawnList = 0x6
 };
 
 UCLASS()
