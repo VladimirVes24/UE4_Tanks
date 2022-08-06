@@ -24,6 +24,7 @@ void ATanksPlayerController::SetupInputComponent()
 		InputComponent->BindAction("FireSpecial", IE_Pressed, this, &ATanksPlayerController::OnShootSpecial);
 		InputComponent->BindAction("SwitchWeapon", IE_Pressed, this, &ATanksPlayerController::OnTryingToSwitchWeapon);
 		InputComponent->BindKey(EKeys::LeftMouseButton, IE_Released, this, &ATanksPlayerController::OnLeftMouseButtonUp);
+		InputComponent->BindAction("OpenInventory", IE_Pressed, this, &ATanksPlayerController::OnTryingToOpenInventory);
 	}
 	
 
@@ -93,6 +94,12 @@ void ATanksPlayerController::OnFlip()
 {
 	if (PlayerTank)
 		PlayerTank->Flip();
+}
+
+void ATanksPlayerController::OnTryingToOpenInventory()
+{
+	if (PlayerTank)
+		PlayerTank->OpenInventory();
 }
 
 

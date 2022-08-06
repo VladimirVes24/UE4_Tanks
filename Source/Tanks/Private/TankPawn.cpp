@@ -59,7 +59,8 @@ ATankPawn::ATankPawn()
 	DeathExplosionEffect = CreateDefaultSubobject<UParticleSystemComponent>("Explosion of death");
 	DeathExplosionEffect->SetupAttachment(RootComponent);
 
-	
+	LocalInventory = CreateDefaultSubobject<UInventoryComponent>("LocalInventory");
+	InventoryManager = CreateDefaultSubobject<UInventoryManagerComponent>("InventoryManager");
 
 	//ShootShake = CreateDefaultSubobject<UMatineeCameraShake>("CameraShakeEffect");
 }
@@ -111,6 +112,9 @@ void ATankPawn::BeginPlay()
 	ClipContains = ClipSize;
 	HealthPointsCurrent = HealthPointsMax;
 	CurrentHealthState = HealthComponent->GetHealthState();
+
+	//InventoryManager->Init(LocalInventory);
+	
 }
 
 void ATankPawn::Destroyed()
@@ -164,8 +168,8 @@ void ATankPawn::Tick(float DeltaTime)
 	}
 	
 	if (Cannon) FireRateTimerValue = Cannon->GetTimerValue();
-	GEngine->AddOnScreenDebugMessage(7777, 1, FColor::Blue, FString(TEXT("Clip ammo: " + FString::FromInt(ClipContains))));
-	GEngine->AddOnScreenDebugMessage(8888, 1, FColor::Blue, FString(TEXT("Ammo left: " + FString::FromInt(AmmoLeft))));
+	//GEngine->AddOnScreenDebugMessage(7777, 1, FColor::Blue, FString(TEXT("Clip ammo: " + FString::FromInt(ClipContains))));
+	//GEngine->AddOnScreenDebugMessage(8888, 1, FColor::Blue, FString(TEXT("Ammo left: " + FString::FromInt(AmmoLeft))));
 }
 
 // Called to bind functionality to input
@@ -323,6 +327,13 @@ void ATankPawn::IncreaseTotalScore(int InputScore)
 {
 	TotalScore+=InputScore;
 	GEngine->AddOnScreenDebugMessage(8585, 10000, FColor::Yellow, FString(TEXT("Total score: " + FString::FromInt(TotalScore))));
+	
+}
+
+void ATankPawn::OpenInventory()
+{
+	//UE_LOG(LogTemp, Warning, TEXT("Entered ATankPawn::OpenInventory"));
+	InventoryManager->Init(LocalInventory);
 	
 }
 

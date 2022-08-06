@@ -24,7 +24,7 @@ void ATanksHUD::Tick(float DeltaTime)
 
 UUserWidget* ATanksHUD::ShowWidget(const EWidgetID WidgetId, const int32 ZOrder)
 {
-	HideWidget();
+	//HideWidget();
 	TSubclassOf<UUserWidget>* ClassPtr = WidgetClasses.Find(WidgetId);
 	if (ClassPtr && *ClassPtr)
 	{

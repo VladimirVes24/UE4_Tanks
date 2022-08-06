@@ -14,6 +14,8 @@
 #include "HealthComponent.h"
 #include "DamageTaker.h"
 #include "Engine/TargetPoint.h"
+#include "Tanks/Inventory/InventoryComponent.h"
+#include "Tanks/Inventory/InventoryManagerComponent.h"
 #include "TankPawn.generated.h"
 
 UCLASS(Blueprintable)
@@ -60,7 +62,7 @@ public:
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
 	UArrowComponent* MachineGunPosition;
-
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
 	TSubclassOf<ACannon> CannonType;
 
@@ -69,6 +71,12 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UMatineeCameraShake> ShootShake;
+
+	UPROPERTY(EditDefaultsOnly)
+	UInventoryComponent* LocalInventory;
+	
+	UPROPERTY(EditDefaultsOnly)
+	UInventoryManagerComponent* InventoryManager;
 	
 	UPROPERTY()
 	ACannon* Cannon;
@@ -140,6 +148,7 @@ public:
 	virtual void TakeDamage(FDamageData DamageData) override;
 	UFUNCTION()
 	void IncreaseTotalScore(int InputScore);
+	void OpenInventory();
 
 	
 	UFUNCTION()

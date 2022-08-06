@@ -29,6 +29,7 @@ public:
 	void OnShootStop();
 	void OnShootSpecial();
 	void OnFlip();
+	void OnTryingToOpenInventory();
 
 	virtual void BeginPlay() override;
 
